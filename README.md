@@ -4,6 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/rba-mcp.svg)](https://pypi.org/project/rba-mcp/)
 [![Python](https://img.shields.io/pypi/pyversions/rba-mcp.svg)](https://pypi.org/project/rba-mcp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Glama MCP server quality](https://glama.ai/mcp/servers/Bigred97/rba-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Bigred97/rba-mcp)
 
 **Ask Claude about Australian interest rates, exchange rates, and lending rates and get real, current numbers** — not "I don't have access to that data." This MCP server gives Claude (and other MCP clients like Cursor) live access to the [Reserve Bank of Australia's statistical tables](https://www.rba.gov.au/statistics/tables/), with curated mappings for the most-asked indicators.
 
