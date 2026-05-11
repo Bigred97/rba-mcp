@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.1.5 (2026-05-11)
+
+Round-2 stress-test follow-up. Two "new bugs" reported in the second customer
+probe pass turned out to be **stale `uvx` cache artifacts** — the tester's
+Claude Desktop was running a pre-0.1.4 wheel, so 0.1.4's dedup fix and 0.1.2's
+`_is_valid_period` calendar check weren't in effect. Both reproducers verified
+to NOT reproduce on 0.1.4+. Hardening shipped anyway:
+
+- **New: `DataResponse.server_version`** field, echoed in every response.
+  Set from `importlib.metadata.version("rba-mcp")`. The previous stale-cache
+  confusion happened twice; surfacing the running version in every response
+  makes it trivial for testers to verify which wheel served their call.
+- **Tests**: +4 round-2 regressions in `test_stress_regressions.py` —
+  200-duplicate-series dedup, absurd-but-valid future end_date (correct
+  inclusive semantics, not a silent bypass), composite invalid-start +
+  valid-end (must error on the start), and that `server_version` appears
+  in every response. 101 unit tests now (was 97).
+
+**To refresh a cached uvx install:** `uvx --refresh rba-mcp --help`, or
+delete the wheel cache (`rm -rf ~/.cache/uv/archive-v0/*rba*`), then
+restart Claude Desktop.
+
 ## 0.1.4 (2026-05-11)
 
 Real-user stress-test fixes. A customer probed the tool surface in Claude

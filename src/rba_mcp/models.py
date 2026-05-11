@@ -69,3 +69,15 @@ class DataResponse(BaseModel):
     attribution: str = _RBA_ATTRIBUTION
     retrieved_at: datetime
     rba_url: str
+    # Echoed in every response so testers can verify which wheel served the
+    # call — uvx caches per-version and stale caches have caused real "is
+    # this fixed?" confusion. `pip install -U` / `uvx --refresh` to update.
+    server_version: str = Field(default_factory=lambda: _get_server_version())
+
+
+def _get_server_version() -> str:
+    try:
+        from importlib.metadata import version
+        return version("rba-mcp")
+    except Exception:
+        return "0.0.0+unknown"

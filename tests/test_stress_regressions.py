@@ -180,3 +180,60 @@ async def test_calendar_invalid_month_rejected():
         await server.get_data(
             table_id="F11.1", series="aud_usd", end_date="2026-13-01"
         )
+
+
+# ----- Round-2 regression tests (post-0.1.4 stress test) -----
+
+async def test_200_duplicate_series_dedup_returns_full_data():
+    """0.1.4 dedup must hold under high-cardinality duplicate input.
+
+    A pre-0.1.4 wheel returned empty for `["aud_usd"]*200` because the duplicate
+    columns broke `to_records`. After dedup it must return the full series.
+    """
+    resp = await server.get_data(
+        table_id="F11.1", series=["aud_usd"] * 200
+    )
+    assert len(resp.records) > 100, (
+        f"200×duplicate-series should dedup to 1 and return all F11.1 daily "
+        f"observations; got {len(resp.records)}"
+    )
+    # And the period field must be a real ISO date, not the series ID.
+    assert all(r.period[:4].isdigit() for r in resp.records[:10])
+
+
+async def test_absurd_valid_future_end_date_is_inclusive_not_filtered():
+    """end_date='9999-12-31' is a valid date strictly after all real data —
+    so the result is identical to passing no end_date. That's correct
+    semantics (not a silent bypass)."""
+    resp_with = await server.get_data(
+        table_id="F11.1", series="aud_usd", end_date="9999-12-31"
+    )
+    await server.reset_client_for_tests()
+    resp_without = await server.get_data(
+        table_id="F11.1", series="aud_usd"
+    )
+    assert len(resp_with.records) == len(resp_without.records), (
+        "end_date in the future of all data should be equivalent to no end_date"
+    )
+
+
+async def test_composite_invalid_start_valid_end_errors_on_start():
+    """The composite `start='2026-99-99', end='9999-12-31'` from the stress
+    test must error on the invalid start rather than silently fall through
+    to a full-dataset return."""
+    with pytest.raises(ValueError, match="not a valid date"):
+        await server.get_data(
+            table_id="F11.1",
+            series="aud_usd",
+            start_date="2026-99-99",
+            end_date="9999-12-31",
+        )
+
+
+async def test_response_includes_server_version():
+    """`server_version` echoed in every DataResponse so testers can verify
+    which wheel served the call (uvx caches per-version)."""
+    resp = await server.latest(table_id="F11.1", series="aud_usd")
+    assert resp.server_version
+    # Should be a valid PEP-440 version (or our editable-install sentinel)
+    assert resp.server_version[0].isdigit()
