@@ -5,9 +5,14 @@ lives in `parsing.py` so the cache layer stays protocol-agnostic.
 
 RBA serves CSVs from a static CDN — no auth, no rate limiting documented.
 We send a courteous User-Agent in case they ever throttle.
+
+Concurrent callers for the same URL share one in-flight HTTP request — see
+`_in_flight` — so a burst of parallel `latest()` calls hits the CDN once,
+not N times.
 """
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import httpx
@@ -37,6 +42,8 @@ class RBAClient:
             headers={"User-Agent": "rba-mcp/0.1 (+https://github.com/Bigred97/rba-mcp)"},
             follow_redirects=True,
         )
+        self._in_flight: dict[str, asyncio.Future[bytes]] = {}
+        self._in_flight_lock = asyncio.Lock()
 
     async def aclose(self) -> None:
         await self._http.aclose()
@@ -50,19 +57,43 @@ class RBAClient:
     async def fetch_table_csv(
         self, csv_filename: str, *, kind: CacheKind = "data"
     ) -> bytes:
-        """Fetch one F-table CSV by filename (e.g. 'f11-data.csv'). Cached."""
+        """Fetch one F-table CSV by filename (e.g. 'f11-data.csv'). Cached.
+
+        Concurrent callers for the same URL share one in-flight HTTP request.
+        """
         url = f"{self.base_url}/statistics/tables/csv/{csv_filename}"
         cached = await self.cache.get(url, ttl=TTL[kind])
         if cached is not None:
             return cached
+
+        async with self._in_flight_lock:
+            existing = self._in_flight.get(url)
+            if existing is None:
+                future: asyncio.Future[bytes] = (
+                    asyncio.get_running_loop().create_future()
+                )
+                self._in_flight[url] = future
+
+        if existing is not None:
+            return await existing
+
         try:
-            resp = await self._http.get(url)
-            resp.raise_for_status()
-        except httpx.HTTPStatusError as e:
-            raise RBAAPIError(
-                f"RBA CDN returned {e.response.status_code} for {url}"
-            ) from e
-        except httpx.RequestError as e:
-            raise RBAAPIError(f"RBA CDN request failed: {e}") from e
-        await self.cache.set(url, resp.content, kind=kind)
-        return resp.content
+            try:
+                resp = await self._http.get(url)
+                resp.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                raise RBAAPIError(
+                    f"RBA CDN returned {e.response.status_code} for {url}"
+                ) from e
+            except httpx.RequestError as e:
+                raise RBAAPIError(f"RBA CDN request failed: {e}") from e
+            await self.cache.set(url, resp.content, kind=kind)
+            future.set_result(resp.content)
+            return resp.content
+        except BaseException as e:
+            if not future.done():
+                future.set_exception(e)
+            raise
+        finally:
+            async with self._in_flight_lock:
+                self._in_flight.pop(url, None)

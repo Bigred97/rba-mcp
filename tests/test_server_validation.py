@@ -94,3 +94,30 @@ async def test_get_data_lowercase_table_normalized():
 
 async def test_list_curated_returns_five():
     assert set(server.list_curated()) == {"F1.1", "F4", "F6", "F11", "F11.1"}
+
+
+async def test_describe_table_registry_inconsistency_raises_value_error(monkeypatch):
+    """A None csv_filename from the registry must surface as ValueError, not AssertionError.
+
+    Regression for an `assert csv_filename is not None` that would have leaked a
+    raw AssertionError to the MCP tool surface (gate 4: no raw exceptions escape).
+    """
+    from rba_mcp import tables as tables_mod
+    monkeypatch.setattr(tables_mod, "get_csv_filename", lambda _tid: None)
+    with pytest.raises(ValueError, match="registry inconsistency"):
+        await server.describe_table("F11")
+
+
+async def test_get_data_registry_inconsistency_raises_value_error(monkeypatch):
+    """Same as above, but for the get_data/latest code path."""
+    from rba_mcp import tables as tables_mod
+    monkeypatch.setattr(tables_mod, "get_csv_filename", lambda _tid: None)
+    with pytest.raises(ValueError, match="registry inconsistency"):
+        await server.get_data("F11", series="aud_usd")
+
+
+async def test_latest_registry_inconsistency_raises_value_error(monkeypatch):
+    from rba_mcp import tables as tables_mod
+    monkeypatch.setattr(tables_mod, "get_csv_filename", lambda _tid: None)
+    with pytest.raises(ValueError, match="registry inconsistency"):
+        await server.latest("F11", series="aud_usd")

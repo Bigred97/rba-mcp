@@ -191,7 +191,11 @@ async def describe_table(table_id: str) -> TableDetail:
         )
 
     csv_filename = tables.get_csv_filename(table_id)
-    assert csv_filename is not None  # registry consistency
+    if csv_filename is None:
+        raise ValueError(
+            f"Internal registry inconsistency: table {table_id} has no csv_filename. "
+            "Report at https://github.com/Bigred97/rba-mcp/issues."
+        )
     rba_url = _rba_url(table_id)
     cd = curated.get(table_id)
 
@@ -283,7 +287,11 @@ async def _get_data_impl(
             "Try search_tables() to discover valid IDs."
         )
     csv_filename = tables.get_csv_filename(table_id)
-    assert csv_filename is not None
+    if csv_filename is None:
+        raise ValueError(
+            f"Internal registry inconsistency: table {table_id} has no csv_filename. "
+            "Report at https://github.com/Bigred97/rba-mcp/issues."
+        )
     rba_url = _rba_url(table_id)
 
     cd = curated.get(table_id)
