@@ -1,0 +1,34 @@
+# rba-mcp
+
+> Live MCP (Model Context Protocol) server giving Claude and other LLM agents access to Reserve Bank of Australia data — cash rate, interest rates, exchange rates, deposit rates, mortgage rates — via plain-English tools. 5 curated F-tables; 14 other F-tables accessible via raw RBA series IDs. Python, MIT, on PyPI. Companion to abs-mcp.
+
+rba-mcp is a Python package installable via `uvx rba-mcp`. When configured in an MCP client like Claude Desktop or Cursor, it exposes five tools to the LLM: `search_tables(query, limit)` for fuzzy discovery, `describe_table(table_id)` for series listings, `get_data(table_id, series, start_date, end_date, format)` for queries, `latest(table_id, series)` for the most-recent observation, and `list_curated()` for the curated table IDs.
+
+For curated tables (F1.1 money market, F4 deposit rates, F6 housing lending rates, F11 monthly FX history, F11.1 daily FX) the LLM passes plain-English series keys like `"cash_rate_target"`, `"aud_usd"`, `"owner_occupier_variable_existing"`. For non-curated tables it passes raw RBA series IDs (e.g. `"FXRUSD"`). Every response includes the date, unit (e.g. `"Per cent per annum"`, `"USD per AUD"`), the CC-BY 4.0 attribution, and a link to RBA.
+
+The server is companion to `abs-mcp` (Australian Bureau of Statistics). Together they cover the most-asked Australian economic data.
+
+## Documentation
+- [README](https://github.com/Bigred97/rba-mcp/blob/main/README.md): install instructions, Claude Desktop / Cursor config, worked examples
+- [CHANGELOG](https://github.com/Bigred97/rba-mcp/blob/main/CHANGELOG.md): full release history
+- [Curated YAMLs](https://github.com/Bigred97/rba-mcp/tree/main/src/rba_mcp/data/curated): one YAML per curated F-table, plain-English keys → RBA series IDs
+- [PyPI](https://pypi.org/project/rba-mcp/): latest published version, install command
+
+## Use cases for an LLM agent
+- "What's the current RBA cash rate?" → `latest("F1.1", series="cash_rate_target")`
+- "What's AUD/USD today?" → `latest("F11.1", series="aud_usd")`
+- "What's the average mortgage rate?" → `latest("F6", series="owner_occupier_variable_existing")`
+- "Show me AUD vs major currencies in 2024" → `get_data("F11", series=["aud_usd", "aud_eur", "aud_gbp", "aud_jpy", "twi"], start_date="2024")`
+- "What rate are 12-month term deposits at?" → `latest("F4", series="term_deposit_12m")`
+- Discovery: when the table ID is unknown, call `search_tables("mortgage rates")` or `search_tables("exchange rate")` then `describe_table(top_result.id)`
+
+## Source
+- [src/rba_mcp/server.py](https://github.com/Bigred97/rba-mcp/blob/main/src/rba_mcp/server.py): FastMCP entrypoint, the 5 tool definitions
+- [src/rba_mcp/parsing.py](https://github.com/Bigred97/rba-mcp/blob/main/src/rba_mcp/parsing.py): label-driven RBA CSV header parser (resilient to RBA adding new metadata rows)
+- [src/rba_mcp/curated.py](https://github.com/Bigred97/rba-mcp/blob/main/src/rba_mcp/curated.py): YAML loader + plain-English series translation
+- [src/rba_mcp/shaping.py](https://github.com/Bigred97/rba-mcp/blob/main/src/rba_mcp/shaping.py): DataFrame → records / series / csv response shaping
+
+## Optional
+- [Companion server: abs-mcp](https://github.com/Bigred97/abs-mcp): Australian Bureau of Statistics data (labour force, CPI, GDP, population) using the same plain-English pattern
+- [Tests](https://github.com/Bigred97/rba-mcp/tree/main/tests): 103 tests covering every curated F-table + URL-injection guards + parser fixtures
+- [Data attribution](https://www.rba.gov.au/copyright/): RBA data is licensed under Creative Commons Attribution 4.0 International (CC BY 4.0)
