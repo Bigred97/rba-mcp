@@ -217,6 +217,26 @@ def _looks_like_date(s: str) -> bool:
     return bool(s) and s[0].isdigit()
 
 
+def _end_of_period(end_str: str) -> pd.Timestamp:
+    """Expand a partial date string to the LAST instant of its period.
+
+    'YYYY'       → that year's 31 December 23:59:59
+    'YYYY-MM'    → that month's last day 23:59:59
+    'YYYY-MM-DD' → that day 23:59:59
+
+    Without this expansion, `end_date="2024"` would be parsed as 2024-01-01
+    and the inclusive comparison would exclude all of 2024 after Jan 1.
+    """
+    n = len(end_str)
+    if n == 4:
+        freq = "Y"
+    elif n == 7:
+        freq = "M"
+    else:
+        freq = "D"
+    return pd.Period(end_str, freq=freq).end_time
+
+
 def filter_by_dates(
     data: pd.DataFrame, start: str | None = None, end: str | None = None
 ) -> pd.DataFrame:
@@ -224,6 +244,10 @@ def filter_by_dates(
 
     Accepts ISO-like strings: 'YYYY', 'YYYY-MM', 'YYYY-MM-DD'.
     Lenient — invalid strings fall through unfiltered.
+
+    `start` snaps to the FIRST instant of its period; `end` snaps to the
+    LAST instant of its period. So `start='2024', end='2024'` means
+    "all of 2024", not just 1 January.
     """
     if data.empty or (start is None and end is None):
         return data
@@ -235,7 +259,7 @@ def filter_by_dates(
             pass
     if end:
         try:
-            out = out[out.index <= pd.to_datetime(end)]
+            out = out[out.index <= _end_of_period(end)]
         except (ValueError, TypeError):
             pass
     return out

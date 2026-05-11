@@ -344,6 +344,16 @@ async def _get_data_impl(
             if isinstance(series_validated, str)
             else list(series_validated)
         )
+
+    # Bug-fix (0.1.4): dedupe series_ids while preserving order. Without this,
+    # passing both a curated key and its underlying raw ID (e.g.
+    # `["aud_usd", "FXRUSD"]`) produced duplicate columns in the
+    # filtered DataFrame, which then made `df[sid]` return a DataFrame
+    # instead of a Series — the period field got polluted with the
+    # series ID and N duplicate records came out.
+    seen: set[str] = set()
+    series_ids = [s for s in series_ids if not (s in seen or seen.add(s))]
+
     _validate_series_for_url(series_ids)
 
     client = await _get_client()
@@ -356,6 +366,21 @@ async def _get_data_impl(
         ) from e
 
     header, df = parse_csv(body)
+
+    # Bug-fix (0.1.4): for non-curated tables, validate requested series
+    # against the actual CSV header. Previously a typo silently produced
+    # an empty result that looked indistinguishable from "no data in range".
+    if cd is None:
+        unknown = [sid for sid in series_ids if sid not in header.series]
+        if unknown:
+            valid = sorted(header.series.keys())
+            hint = ", ".join(valid[:10]) + ("..." if len(valid) > 10 else "")
+            raise ValueError(
+                f"Unknown series {unknown} for non-curated table '{table_id}'. "
+                f"Valid series IDs from the CSV header: {hint}. "
+                f"Call describe_table('{table_id}') to see the full list."
+            )
+
     df = filter_by_series(df, series_ids)
     df = filter_by_dates(df, start_date_validated, end_date_validated)
 

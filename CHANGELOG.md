@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.1.4 (2026-05-11)
+
+Real-user stress-test fixes. A customer probed the tool surface in Claude
+Desktop and surfaced three correctness bugs that unit tests missed.
+
+- **Fix: `latest()` / `get_data()` dedupe series.** Passing both a curated
+  key and the underlying raw series ID for the same series — e.g.
+  `series=["aud_usd", "FXRUSD"]` — used to return 4 duplicate records
+  with `period="FXRUSD"` (the series ID literal in the date field). Root
+  cause: duplicate column names made `df[sid]` return a DataFrame
+  instead of a Series, breaking the `to_records` iteration. Now dedupes
+  series IDs while preserving order before filtering.
+- **Fix: `end_date` partial-period expansion.** `end_date="2024"` used
+  to be parsed as `2024-01-01` and the inclusive comparison excluded all
+  of 2024 after Jan 1 — so a "full year" query returned zero records.
+  Same for `YYYY-MM` (excluded the rest of the month). `end_date` now
+  expands to the LAST instant of its period: `YYYY` → 31 Dec, `YYYY-MM`
+  → last day of month, `YYYY-MM-DD` → that day. `start_date` semantics
+  unchanged (still snaps to the FIRST instant — that's correct for the
+  lower bound).
+- **Fix: validate non-curated series against CSV header.** Calling
+  `get_data("F2", series=["FAKESERIES"])` on a non-curated table used
+  to silently return `[]` instead of erroring (curated tables already
+  rejected unknown series with a hint). Pipelines couldn't distinguish
+  a typo from "no data in date range". Now non-curated paths validate
+  requested series against the parsed CSV header and raise `ValueError`
+  with the first 10 valid IDs as a hint.
+- **Tests**: +10 regression tests in `tests/test_stress_regressions.py`,
+  one per bug-class. 97 unit tests passing (was 87).
+
+Note: Bug #4 from the stress-test report (calendar-invalid dates like
+`2026-02-30` being accepted) was already fixed in 0.1.2's `_is_valid_period`
+semantic check. If you saw that bug, your Claude Desktop was running a
+cached older wheel via uvx; refresh with `uvx --refresh rba-mcp` or
+restart Claude Desktop.
+
 ## 0.1.3 (2026-05-11)
 
 Docs polish — same artifact every successful MCP launch had.
