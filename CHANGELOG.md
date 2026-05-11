@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.2 (2026-05-11)
+
+Cache-corruption recovery; no behaviour changes for valid inputs.
+
+- **Fix**: `Cache._ensure_init()` now catches `sqlite3.DatabaseError` on
+  initial schema setup and self-heals by deleting the corrupt file and
+  recreating it. Previously, a corrupt `~/.rba-mcp/cache.db` (from a partial
+  write after a crash, an older-version schema, or user accident) would leak
+  `sqlite3.DatabaseError("file is not a database")` to the caller — a raw
+  library exception escaping the tool surface, against gate 4. The cache is
+  a performance optimisation, not a source of truth, so silently recreating
+  it is always safe.
+- **Tests**: +5 in a new `tests/test_cache.py` (set/get roundtrip, TTL
+  expiry, clear-by-kind, corrupt-file self-heal, zero-byte-file self-heal).
+  Total: 87 unit + 21 live = 108.
+
 ## 0.1.1 (2026-05-11)
 
 Audit-driven hardening pass; no behaviour changes for existing valid inputs.
