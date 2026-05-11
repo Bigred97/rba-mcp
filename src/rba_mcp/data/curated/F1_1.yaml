@@ -1,0 +1,65 @@
+id: F1.1
+name: Money Market — Monthly
+description: |
+  Monthly money-market rates including the RBA Cash Rate Target (the headline
+  policy rate), interbank cash rate, bank-accepted bills, OIS rates, and
+  Treasury notes. Source: Reserve Bank of Australia, Statistical Table F1.1.
+update_frequency: monthly
+csv_filename: f1.1-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - cash rate
+  - cash rate target
+  - rba rate
+  - monetary policy
+  - interest rates
+  - money market
+  - ocr
+  - bank bills
+  - ois
+  - treasury notes
+series:
+  cash_rate_target:
+    series_id: FIRMMCRT
+    description: RBA Cash Rate Target — the headline monetary-policy rate
+    unit: Per cent per annum
+  cash_rate:
+    series_id: FIRMMCRI
+    description: Interbank Overnight Cash Rate (actual realised)
+    unit: Per cent per annum
+  bank_bill_30d:
+    series_id: FIRMMBAB30
+    description: 1-month Bank-Accepted Bill / NCD yield
+    unit: Per cent per annum
+  bank_bill_90d:
+    series_id: FIRMMBAB90
+    description: 3-month Bank-Accepted Bill / NCD yield
+    unit: Per cent per annum
+  bank_bill_180d:
+    series_id: FIRMMBAB180
+    description: 6-month Bank-Accepted Bill / NCD yield
+    unit: Per cent per annum
+  ois_30d:
+    series_id: FIRMMOIS1
+    description: 1-month Overnight Index Swap rate
+    unit: Per cent per annum
+  ois_90d:
+    series_id: FIRMMOIS3
+    description: 3-month Overnight Index Swap rate
+    unit: Per cent per annum
+  ois_180d:
+    series_id: FIRMMOIS6
+    description: 6-month Overnight Index Swap rate
+    unit: Per cent per annum
+  treasury_note_30d:
+    series_id: FIRMMTN1
+    description: 1-month Treasury Note yield
+    unit: Per cent per annum
+  treasury_note_90d:
+    series_id: FIRMMTN3
+    description: 3-month Treasury Note yield
+    unit: Per cent per annum
+  treasury_note_180d:
+    series_id: FIRMMTN6
+    description: 6-month Treasury Note yield
+    unit: Per cent per annum

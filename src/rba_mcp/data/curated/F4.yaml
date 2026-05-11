@@ -1,0 +1,60 @@
+id: F4
+name: Retail Deposit and Investment Rates
+description: |
+  Monthly retail deposit rates: transaction accounts, savings accounts, cash
+  management trusts, and bank term deposits across maturities. Series cover
+  all institutions for $10K balance unless otherwise noted. Source: RBA F4.
+update_frequency: monthly
+csv_filename: f4-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - deposit rates
+  - savings rates
+  - savings account rate
+  - term deposit
+  - online savings
+  - bonus savings
+  - cash management trust
+  - investment rates
+  - high interest savings
+series:
+  transaction_account:
+    series_id: FRDIRTAB5K
+    description: Transaction account rate, banks, $5K balance
+    unit: Per cent per annum
+  bonus_savings:
+    series_id: FRDIRSAB10K
+    description: Bonus savings account rate, $10K balance
+    unit: Per cent per annum
+  online_savings:
+    series_id: FRDIRSAO10K
+    description: Online savings account rate, $10K balance
+    unit: Per cent per annum
+  cash_management_trust:
+    series_id: FRDIRCMT
+    description: Cash management trust yield
+    unit: Per cent per annum
+  term_deposit_1m:
+    series_id: FRDIRBTD10K1M
+    description: 1-month bank term deposit, $10K balance
+    unit: Per cent per annum
+  term_deposit_3m:
+    series_id: FRDIRBTD10K3M
+    description: 3-month bank term deposit, $10K balance
+    unit: Per cent per annum
+  term_deposit_6m:
+    series_id: FRDIRBTD10K6M
+    description: 6-month bank term deposit, $10K balance
+    unit: Per cent per annum
+  term_deposit_12m:
+    series_id: FRDIRBTD10K1Y
+    description: 1-year bank term deposit, $10K balance
+    unit: Per cent per annum
+  term_deposit_3y:
+    series_id: FRDIRBTD10K3Y
+    description: 3-year bank term deposit, $10K balance
+    unit: Per cent per annum
+  term_deposit_at_call:
+    series_id: FRDIRBTD10KAR
+    description: At-call bank term-deposit rate
+    unit: Per cent per annum

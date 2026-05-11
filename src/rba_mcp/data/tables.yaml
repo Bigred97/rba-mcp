@@ -1,0 +1,102 @@
+# Registry of all 19 RBA F-tables (statistical tables).
+# IDs are RBA's official table codes; csv_filename is the literal file at
+# https://www.rba.gov.au/statistics/tables/csv/{csv_filename}.
+# search_keywords are folded into the fuzzy-search haystack so common
+# queries find the right table.
+
+tables:
+  - id: F1
+    name: Interest Rates and Yields – Money Market – Daily
+    csv_filename: f1-data.csv
+    frequency: Daily
+    search_keywords: [cash rate, interest rates, money market, daily, ois, bank bills]
+  - id: F1.1
+    name: Interest Rates and Yields – Money Market – Monthly
+    csv_filename: f1.1-data.csv
+    frequency: Monthly
+    search_keywords: [cash rate, cash rate target, interest rates, money market, monthly, ois, bank bills, treasury notes, monetary policy]
+  - id: F2
+    name: Capital Market Yields – Government Bonds – Daily
+    csv_filename: f2-data.csv
+    frequency: Daily
+    search_keywords: [government bonds, yields, treasury bonds, capital market, 10 year bond]
+  - id: F2.1
+    name: Capital Market Yields – Government Bonds – Monthly
+    csv_filename: f2.1-data.csv
+    frequency: Monthly
+    search_keywords: [government bonds, yields, treasury bonds, capital market, 10 year bond, monthly]
+  - id: F3
+    name: Aggregate Measures of Australian Corporate Bond Yields
+    csv_filename: f3-data.csv
+    frequency: Monthly
+    search_keywords: [corporate bonds, corporate yields, credit spread]
+  - id: F4
+    name: Retail Deposit and Investment Rates
+    csv_filename: f4-data.csv
+    frequency: Monthly
+    search_keywords: [deposit rates, savings, term deposits, investment rates, banks, savings account, cash management trust]
+  - id: F4.1
+    name: Paid Deposit Rates
+    csv_filename: f4.1-data.csv
+    frequency: Monthly
+    search_keywords: [paid deposit rates, actual deposits paid, weighted deposit rates]
+  - id: F5
+    name: Indicator Lending Rates
+    csv_filename: f5-data.csv
+    frequency: Monthly
+    search_keywords: [indicator lending rates, business lending, credit cards, personal loans]
+  - id: F6
+    name: Housing Lending Rates
+    csv_filename: f6-data.csv
+    frequency: Monthly
+    search_keywords: [mortgage rates, housing lending, home loans, owner occupier, investor, fixed rate, variable rate, mortgage]
+  - id: F7
+    name: Business Lending Rates
+    csv_filename: f7-data.csv
+    frequency: Monthly
+    search_keywords: [business lending, business loans, sme rates, commercial lending]
+  - id: F8
+    name: Personal Lending Rates
+    csv_filename: f8-data.csv
+    frequency: Monthly
+    search_keywords: [personal loans, credit cards, personal lending]
+  - id: F9
+    name: Foreign Exchange Turnover Against Australian Dollars
+    csv_filename: f9-data.csv
+    frequency: Monthly
+    search_keywords: [fx turnover, foreign exchange volume, aud turnover]
+  - id: F10
+    name: Foreign Exchange Turnover Against All Currencies
+    csv_filename: f10-data.csv
+    frequency: Monthly
+    search_keywords: [fx turnover, foreign exchange volume, all currencies]
+  - id: F11
+    name: Exchange Rates – Monthly History (1983+)
+    csv_filename: f11-data.csv
+    frequency: Monthly
+    search_keywords: [exchange rates, fx, foreign exchange, aud, currency, twi, trade weighted index, monthly history, aud usd, aud eur, aud gbp]
+  - id: F11.1
+    name: Exchange Rates – Daily (2023+)
+    csv_filename: f11.1-data.csv
+    frequency: Daily
+    search_keywords: [exchange rates, fx, foreign exchange, aud, currency, daily, current, aud usd today, aud eur today]
+  - id: F12
+    name: US Dollar Exchange Rates
+    csv_filename: f12-data.csv
+    frequency: Daily
+    search_keywords: [us dollar, usd exchange rates, dxy]
+  - id: F15
+    name: Real Exchange Rate Measures
+    csv_filename: f15-data.csv
+    frequency: Monthly
+    search_keywords: [real exchange rate, reer, real twi, competitiveness]
+  - id: F16
+    name: Indicative Mid Rates of Selected Australian Government Securities
+    csv_filename: f16-data.csv
+    frequency: Daily
+    search_keywords: [government securities, mid rates, indicative rates]
+  - id: F17
+    name: Zero-coupon Interest Rates – Analytical Series – 2017 to Current
+    csv_filename: f17-data.csv
+    frequency: Daily
+    search_keywords: [zero coupon, yield curve, zero coupon rates, analytical series]

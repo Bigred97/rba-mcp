@@ -1,0 +1,56 @@
+id: F11
+name: Exchange Rates — Monthly History (1983+)
+description: |
+  Monthly average exchange rates of the Australian Dollar against major
+  currencies and the Trade-Weighted Index. Goes back to January 2010 in
+  this CSV (earlier history is in separate XLS files). For current daily
+  rates, use F11.1. Source: RBA F11.
+update_frequency: monthly
+csv_filename: f11-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - exchange rate history
+  - aud history
+  - foreign exchange monthly
+  - aud usd history
+  - aud eur history
+  - twi history
+  - trade weighted index
+  - currency trend
+series:
+  aud_usd:
+    series_id: FXRUSD
+    description: Australian dollar per US dollar (USD per AUD)
+    unit: USD per AUD
+  twi:
+    series_id: FXRTWI
+    description: Trade-weighted index (May 1970 = 100)
+    unit: Index
+  aud_eur:
+    series_id: FXREUR
+    description: Australian dollar per Euro
+    unit: EUR per AUD
+  aud_gbp:
+    series_id: FXRUKPS
+    description: Australian dollar per UK Pound Sterling
+    unit: GBP per AUD
+  aud_jpy:
+    series_id: FXRJY
+    description: Australian dollar per Japanese Yen
+    unit: JPY per AUD
+  aud_cny:
+    series_id: FXRCR
+    description: Australian dollar per Chinese Renminbi
+    unit: CNY per AUD
+  aud_nzd:
+    series_id: FXRNZD
+    description: Australian dollar per New Zealand dollar
+    unit: NZD per AUD
+  aud_inr:
+    series_id: FXRIRE
+    description: Australian dollar per Indian Rupee
+    unit: INR per AUD
+  aud_sgd:
+    series_id: FXRSD
+    description: Australian dollar per Singapore dollar
+    unit: SGD per AUD

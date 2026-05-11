@@ -1,0 +1,62 @@
+id: F11.1
+name: Exchange Rates — Daily (2023+)
+description: |
+  Daily exchange rates of the Australian Dollar against major currencies and
+  the Trade-Weighted Index, from January 2023 to current. Use this for
+  "today's AUD/USD" type queries; use F11 for monthly history back to 2010.
+  Source: RBA F11.1.
+update_frequency: daily
+csv_filename: f11.1-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - exchange rate today
+  - current exchange rate
+  - exchange rate now
+  - aud usd today
+  - aud eur today
+  - aud gbp today
+  - daily exchange rate
+  - daily fx
+  - current fx
+  - aud usd
+  - aud eur
+  - aud gbp
+  - aud jpy
+  - twi
+  - trade weighted index
+  - currency rate
+  - foreign exchange
+  - australian dollar
+series:
+  aud_usd:
+    series_id: FXRUSD
+    description: Australian dollar per US dollar (USD per AUD)
+    unit: USD per AUD
+  twi:
+    series_id: FXRTWI
+    description: Trade-weighted index (May 1970 = 100)
+    unit: Index
+  aud_eur:
+    series_id: FXREUR
+    description: Australian dollar per Euro
+    unit: EUR per AUD
+  aud_gbp:
+    series_id: FXRUKPS
+    description: Australian dollar per UK Pound Sterling
+    unit: GBP per AUD
+  aud_jpy:
+    series_id: FXRJY
+    description: Australian dollar per Japanese Yen
+    unit: JPY per AUD
+  aud_cny:
+    series_id: FXRCR
+    description: Australian dollar per Chinese Renminbi
+    unit: CNY per AUD
+  aud_nzd:
+    series_id: FXRNZD
+    description: Australian dollar per New Zealand dollar
+    unit: NZD per AUD
+  aud_sgd:
+    series_id: FXRSD
+    description: Australian dollar per Singapore dollar
+    unit: SGD per AUD

@@ -1,0 +1,65 @@
+id: F6
+name: Housing Lending Rates
+description: |
+  Monthly average mortgage rates by owner-occupier vs investor, variable vs
+  fixed, and outstanding (existing book) vs newly funded loans. The headline
+  "average mortgage rate" is `owner_occupier_variable_existing`. All-institutions
+  basis (covers banks, credit unions, etc.). Source: RBA F6.
+update_frequency: monthly
+csv_filename: f6-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - mortgage rates
+  - home loan rates
+  - housing lending
+  - owner occupier
+  - investor mortgage
+  - fixed rate mortgage
+  - variable rate mortgage
+  - average mortgage rate
+  - mortgage interest rate
+series:
+  owner_occupier_existing:
+    series_id: FLRHOOTA
+    description: Owner-occupier outstanding average rate (all loan types, all institutions)
+    unit: Per cent per annum
+  owner_occupier_variable_existing:
+    series_id: FLRHOOVA
+    description: Owner-occupier outstanding variable-rate loans (all institutions)
+    unit: Per cent per annum
+  owner_occupier_new:
+    series_id: FLRHOFTA
+    description: Owner-occupier new loans funded in the month (all loan types, all institutions)
+    unit: Per cent per annum
+  owner_occupier_variable_new:
+    series_id: FLRHOFVA
+    description: Owner-occupier new variable-rate loans (all institutions)
+    unit: Per cent per annum
+  owner_occupier_fixed_short:
+    series_id: FLRHOFFA
+    description: Owner-occupier new fixed-rate loans, ≤3-year residual fixed term
+    unit: Per cent per annum
+  owner_occupier_fixed_long:
+    series_id: FLRHOFFB
+    description: Owner-occupier new fixed-rate loans, >3-year residual fixed term
+    unit: Per cent per annum
+  investor_existing:
+    series_id: FLRHIOTA
+    description: Investor outstanding average rate (all loan types, all institutions)
+    unit: Per cent per annum
+  investor_variable_existing:
+    series_id: FLRHIOVA
+    description: Investor outstanding variable-rate loans (all institutions)
+    unit: Per cent per annum
+  investor_new:
+    series_id: FLRHIFTA
+    description: Investor new loans funded in the month (all loan types, all institutions)
+    unit: Per cent per annum
+  investor_variable_new:
+    series_id: FLRHIFVA
+    description: Investor new variable-rate loans (all institutions)
+    unit: Per cent per annum
+  investor_fixed_short:
+    series_id: FLRHIFFA
+    description: Investor new fixed-rate loans, ≤3-year residual fixed term
+    unit: Per cent per annum
