@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+from datetime import datetime
 from typing import Any, Literal
 
 from fastmcp import FastMCP
@@ -133,7 +134,29 @@ def _validate_period(value: Any, field_name: str) -> str | None:
             f"{field_name} {value!r} has invalid format. "
             "Use 'YYYY', 'YYYY-MM', or 'YYYY-MM-DD' (digits + dashes only)."
         )
+    # Semantic check: the regex accepts shapes like '2024-13', '----', '00-00'
+    # that aren't real dates. Reject them here so the user gets a clean error
+    # instead of silently unfiltered data (filter_by_dates is lenient on
+    # purpose — that's the cache-safe behaviour for legitimate edge cases
+    # like 'BCE' future dates, not for typos).
+    if not _is_valid_period(s):
+        raise ValueError(
+            f"{field_name} {value!r} is not a valid date. "
+            "Use 'YYYY' (e.g. '2024'), 'YYYY-MM' (e.g. '2024-03'), or "
+            "'YYYY-MM-DD' (e.g. '2024-03-15')."
+        )
     return s
+
+
+def _is_valid_period(s: str) -> bool:
+    """True iff s parses as YYYY, YYYY-MM, or YYYY-MM-DD."""
+    for fmt in ("%Y-%m-%d", "%Y-%m", "%Y"):
+        try:
+            datetime.strptime(s, fmt)
+            return True
+        except ValueError:
+            continue
+    return False
 
 
 def _validate_series_for_url(series_ids: list[str]) -> None:

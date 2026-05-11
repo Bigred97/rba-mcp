@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "rba": {
+      "command": "uvx",
+      "args": ["rba-mcp"]
+    }
+  }
+}
