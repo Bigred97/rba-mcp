@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.3 (2026-05-11)
+
+Docs polish — same artifact every successful MCP launch had.
+
+- **Hero screenshot in README** showing Claude Desktop answering "Show me AUD against USD, EUR, GBP and the trade-weighted index since 2024" — four metric cards (AUD/USD 0.7231, AUD/EUR 0.6154, AUD/GBP 0.5323, TWI 66.9), rebased line chart, and macro-context analysis identifying the April 2025 tariff-risk-off trough.
+- **"How it works" section** with a second screenshot showing Claude querying the F1.1 monthly cash-rate table (4.10%), noticing it's stale relative to the 5 May 2026 Board hike, and web-searching to surface the post-meeting rate (4.35%). Demonstrates clean composition of MCP-tool + web-search synthesis.
+- **`docs/demo.png`** + **`docs/cash-rate.png`** committed to the repo for embedding.
+
 ## 0.1.2 (2026-05-11)
 
 Cache-corruption recovery; no behaviour changes for valid inputs.

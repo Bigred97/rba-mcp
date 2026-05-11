@@ -7,6 +7,8 @@
 
 **Ask Claude about Australian interest rates, exchange rates, and lending rates and get real, current numbers** — not "I don't have access to that data." This MCP server gives Claude (and other MCP clients like Cursor) live access to the [Reserve Bank of Australia's statistical tables](https://www.rba.gov.au/statistics/tables/), with curated mappings for the most-asked indicators.
 
+![rba-mcp answering "Show me AUD against USD, EUR, GBP and the trade-weighted index since 2024" in Claude Desktop — four metric cards, rebased line chart, macro-context analysis](docs/demo.png)
+
 Companion to [abs-mcp](https://github.com/Bigred97/abs-mcp) — together they cover the most-asked Australian economic data.
 
 ## What you can ask
@@ -124,6 +126,14 @@ get_data(
   start_date="2020"
 )
 ```
+
+## How it works
+
+Claude picks the right tool, fills in the curated series keys, calls the live RBA CDN, and synthesises the answer. When the curated table is stale relative to a rate decision (RBA's monthly F1.1 publishes around the 5th business day, but Board meetings can hike between publications), Claude fluidly composes web-search results with this server's data:
+
+![Claude querying rba-mcp for cash rate, noticing the F1.1 monthly is at 4.10%, and web-searching to learn the Board hiked 25bp at the 5 May meeting → reports 4.35% effective 6 May 2026 with citations](docs/cash-rate.png)
+
+You don't have to know what `FIRMMCRT` or `FXRUSD` mean — and neither does Claude. The server's curated YAMLs map plain-English keys (`cash_rate_target`, `aud_usd`) to RBA series IDs and surface unit attribution + the CC-BY 4.0 attribution string in every response.
 
 ## Period formats
 
