@@ -237,3 +237,26 @@ async def test_response_includes_server_version():
     assert resp.server_version
     # Should be a valid PEP-440 version (or our editable-install sentinel)
     assert resp.server_version[0].isdigit()
+
+
+# ----- Round-3 regression test (post-0.1.5 audit) -----
+
+async def test_get_data_non_string_format_rejects_cleanly():
+    """Bug #9 regression (0.1.6): `format=42` used to crash with raw
+    `AttributeError: 'int' object has no attribute 'lower'` because the
+    coercion `(fmt or "records").lower()` ran before the type-validation
+    guard. Now: clean ValueError with a useful hint."""
+    import pytest
+    with pytest.raises(ValueError, match="format must be a string"):
+        await server.get_data(table_id="F11.1", series="aud_usd", format=42)  # type: ignore[arg-type]
+
+
+async def test_get_data_other_non_string_format_types():
+    """Same guard — covers list, dict, None-coerced-from-list etc."""
+    import pytest
+    for bad in [42, 3.14, ["records"], {"format": "records"}, True]:
+        with pytest.raises(ValueError, match="format must be a string"):
+            await server.get_data(
+                table_id="F11.1", series="aud_usd", format=bad  # type: ignore[arg-type]
+            )
+        await server.reset_client_for_tests()

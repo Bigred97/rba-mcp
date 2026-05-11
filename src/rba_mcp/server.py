@@ -292,7 +292,19 @@ async def _get_data_impl(
     series_validated = _validate_series(series)
     start_date_validated = _validate_period(start_date, "start_date")
     end_date_validated = _validate_period(end_date, "end_date")
-    fmt_norm = (fmt or "records").lower()
+    # Bug-fix (0.1.6): type-check `fmt` BEFORE coercing. Previously
+    # `(fmt or "records").lower()` ran first; `format=42` crashed with
+    # AttributeError on .lower() before the validation guard below could
+    # reject it cleanly. Now: non-string fmt errors with a useful hint.
+    if fmt is None:
+        fmt_norm = "records"
+    elif isinstance(fmt, str):
+        fmt_norm = fmt.lower()
+    else:
+        raise ValueError(
+            f"format must be a string, got {type(fmt).__name__}. "
+            f"Valid options: {sorted(_VALID_FORMATS)}"
+        )
     if fmt_norm not in _VALID_FORMATS:
         raise ValueError(
             f"Unknown format {fmt!r}. Valid options: {sorted(_VALID_FORMATS)}"
