@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.6 (2026-05-11)
+
+First release published via **PyPI Trusted Publishing** (no API token in CI).
+
+- **Fix: `format` type validation order.** `get_data(..., format=42)` used
+  to crash with `AttributeError: 'int' object has no attribute 'lower'`
+  because `(fmt or "records").lower()` was called before the type-check
+  guard. Now: type-check first, then coerce. Non-string `format` errors
+  with a useful hint listing valid options. Covers int, float, list,
+  dict, bool. Bug surfaced by a real-customer audit pass.
+- **+2 regression tests** locking in the type guard (103 unit tests).
+
 ## 0.1.5 (2026-05-11)
 
 Round-2 stress-test follow-up. Two "new bugs" reported in the second customer
