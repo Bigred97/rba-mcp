@@ -13,9 +13,10 @@ from __future__ import annotations
 import asyncio
 import re
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from fastmcp import FastMCP
+from pydantic import Field
 
 from . import curated, tables
 from .client import RBAAPIError, RBAClient
@@ -171,12 +172,50 @@ def _validate_series_for_url(series_ids: list[str]) -> None:
 
 
 @mcp.tool
-async def search_tables(query: str, limit: int = 10) -> list[TableSummary]:
+async def search_tables(
+    query: Annotated[
+        str,
+        Field(
+            description=(
+                "Free-text search query. Matches against F-table IDs, names, "
+                "and topic keywords. Case-insensitive."
+            ),
+            examples=["cash rate", "aud usd", "mortgage rates", "term deposits", "yield curve"],
+        ),
+    ],
+    limit: Annotated[
+        int,
+        Field(
+            description="Maximum number of results to return, ranked by relevance.",
+            examples=[5, 10, 20],
+            ge=1,
+            le=100,
+        ),
+    ] = 10,
+) -> list[TableSummary]:
     """Fuzzy-search RBA F-tables by name and topic.
 
-    Returns the top matching tables ranked by relevance. Use this when you
-    don't know the exact table ID — for example, search "cash rate", "aud
-    usd", "mortgage rates", or "term deposits".
+    Use this when you don't know the exact table ID. The 5 curated F-tables
+    (F1.1, F4, F6, F11, F11.1) cover the most-asked indicators: cash rate,
+    money-market rates, household lending rates, FX rates.
+
+    Examples:
+        # Find the F-table that publishes the cash rate
+        results = await search_tables("cash rate")
+        # → [{id: 'F1.1', name: 'Interest Rates and Yields - Money Market', ...}]
+
+        # Discover what's available on FX
+        results = await search_tables("aud usd", limit=5)
+        # → top 5 FX-related tables, curated F11/F11.1 first
+
+    When to use:
+        - You have a natural-language question and need to identify the table
+        - You want to discover what RBA publishes on a topic
+        - You're enumerating the F-table catalog programmatically
+
+    Returns:
+        List of TableSummary (id, name, frequency, description), ranked
+        by relevance. Curated tables surface above the rest.
     """
     if not isinstance(query, str):
         raise ValueError(
@@ -198,12 +237,44 @@ async def search_tables(query: str, limit: int = 10) -> list[TableSummary]:
 
 
 @mcp.tool
-async def describe_table(table_id: str) -> TableDetail:
+async def describe_table(
+    table_id: Annotated[
+        str,
+        Field(
+            description=(
+                "RBA F-table ID like 'F1.1', 'F11', 'F6'. Use search_tables() "
+                "to discover or list_curated() to enumerate the 5 plain-English "
+                "tables. Case-insensitive ('f11' resolves to 'F11')."
+            ),
+            examples=["F1.1", "F4", "F6", "F11", "F11.1"],
+        ),
+    ],
+) -> TableDetail:
     """Describe an RBA F-table's series, units, and frequency.
 
-    For curated tables (F1.1, F4, F6, F11, F11.1), returns plain-English
-    series keys (like 'cash_rate_target', 'aud_usd') with descriptions.
-    For other tables, returns raw RBA series IDs from the CSV header.
+    For curated F-tables (F1.1, F4, F6, F11, F11.1), returns plain-English
+    series keys (like 'cash_rate_target', 'aud_usd') with descriptions and
+    units. For other F-tables, fetches the CSV and returns the raw RBA
+    series IDs from the header along with start dates.
+
+    Examples:
+        # Curated table — plain-English keys
+        detail = await describe_table("F1.1")
+        # detail.series[0]: key='cash_rate_target', series_id='FIRMMCRT',
+        #   unit='Per cent per annum', frequency='Daily'
+
+        # Curated FX table
+        detail = await describe_table("F11.1")
+        # detail.series has 'aud_usd', 'aud_eur', 'aud_jpy', 'aud_cny', etc.
+
+    When to use:
+        - Before calling get_data on a new table — to discover valid series keys
+        - To get the canonical RBA source URL for citation
+        - To distinguish curated (plain-English) tables from raw F-tables
+
+    Returns:
+        TableDetail with id, name, description, is_curated flag, frequency,
+        list of SeriesDetail (key, series_id, description, unit), and rba_url.
     """
     table_id = _normalize_table_id(table_id)
     summary = tables.get_table(table_id)
@@ -415,41 +486,175 @@ async def _get_data_impl(
 
 @mcp.tool
 async def get_data(
-    table_id: str,
-    series: str | list[str] | None = None,
-    start_date: str | None = None,
-    end_date: str | None = None,
-    format: Literal["records", "series", "csv"] = "records",
+    table_id: Annotated[
+        str,
+        Field(
+            description="RBA F-table ID like 'F1.1', 'F11'. Use search_tables() to discover.",
+            examples=["F1.1", "F11", "F6", "F4"],
+        ),
+    ],
+    series: Annotated[
+        str | list[str] | None,
+        Field(
+            description=(
+                "Which series to return. For curated tables: plain-English keys "
+                "(e.g. 'aud_usd', 'cash_rate_target') or a list for multi-series. "
+                "For raw F-tables: raw RBA series IDs (e.g. 'FXRUSD'). "
+                "Pass None (default) to return all curated series in the table."
+            ),
+            examples=[
+                "cash_rate_target",
+                "aud_usd",
+                ["aud_usd", "aud_eur", "aud_jpy"],
+                "FXRUSD",
+            ],
+        ),
+    ] = None,
+    start_date: Annotated[
+        str | None,
+        Field(
+            description=(
+                "Inclusive start date. Accepts 'YYYY', 'YYYY-MM', or 'YYYY-MM-DD'. "
+                "Semantic-checked: '2024-13' or '----' rejected at the boundary."
+            ),
+            examples=["2024", "2024-03", "2024-03-15"],
+        ),
+    ] = None,
+    end_date: Annotated[
+        str | None,
+        Field(
+            description="Inclusive end date. Same format as start_date.",
+            examples=["2025", "2025-12", "2025-12-31"],
+        ),
+    ] = None,
+    format: Annotated[
+        Literal["records", "series", "csv"],
+        Field(
+            description=(
+                "Response shape. 'records' (default): flat list of observations. "
+                "'series': observations grouped by series_id. 'csv': returns "
+                "the table as a CSV string in the `csv` field."
+            ),
+            examples=["records", "series", "csv"],
+        ),
+    ] = "records",
 ) -> DataResponse:
-    """Query an RBA F-table.
+    """Query an RBA F-table and return observations.
 
-    For curated tables, `series` accepts plain-English keys (e.g. `"aud_usd"`,
-    `"cash_rate_target"`). For other tables, pass raw RBA series IDs.
-    Pass `series=None` to query all curated series for that table.
+    Curated tables (F1.1, F4, F6, F11, F11.1) accept plain-English series
+    keys that map to canonical RBA series IDs server-side. Pass a list of
+    keys for a multi-series query, or omit `series` to get every curated
+    series in the table.
 
-    `start_date` / `end_date` accept 'YYYY-MM-DD', 'YYYY-MM', or 'YYYY'.
-    `format`: 'records' (default; flat list), 'series' (grouped), or 'csv'.
+    Examples:
+        # Cash rate target since 2020
+        resp = await get_data("F1.1", series="cash_rate_target", start_date="2020")
+        # → resp.records[0]: period='2020-01-01', value=0.25, series='cash_rate_target'
+
+        # All FX rates against AUD, last year
+        resp = await get_data("F11.1", start_date="2024-01-01", end_date="2024-12-31")
+        # → resp.records covers aud_usd, aud_eur, aud_jpy, aud_cny, ... daily
+
+        # Mortgage rates as CSV
+        resp = await get_data("F6", format="csv", start_date="2023")
+        # → resp.csv = "date,series,value\n2023-01-01,housing_standard_variable,..."
+
+        # Raw (non-curated) F-table — pass raw RBA series IDs
+        resp = await get_data("F1", series=["FIRMMCRTD", "FIRMMBAB30"])
+
+    When to use:
+        - You want a time series of an RBA indicator (use latest() for current-only)
+        - You want a multi-series comparison (e.g. all FX rates)
+        - You want CSV for downstream charting
+
+    Returns:
+        DataResponse with records, unit, period bounds, RBA source URL,
+        and CC-BY 4.0 attribution.
     """
     return await _get_data_impl(table_id, series, start_date, end_date, format)
 
 
 @mcp.tool
 async def latest(
-    table_id: str,
-    series: str | list[str] | None = None,
+    table_id: Annotated[
+        str,
+        Field(
+            description="RBA F-table ID. Use search_tables() to discover.",
+            examples=["F1.1", "F11", "F6", "F11.1"],
+        ),
+    ],
+    series: Annotated[
+        str | list[str] | None,
+        Field(
+            description=(
+                "Which series to return. For curated tables: plain-English keys. "
+                "Pass None (default) to get the latest observation for every "
+                "curated series in the table — useful for dashboards."
+            ),
+            examples=[
+                "cash_rate_target",
+                "aud_usd",
+                ["aud_usd", "aud_eur", "aud_jpy"],
+            ],
+        ),
+    ] = None,
 ) -> DataResponse:
     """Return the most recent observation for each series in an RBA F-table.
 
-    Pass `series=None` to get the latest observation for every curated
-    series in the table (e.g. `latest("F11.1")` returns latest AUD/USD,
-    AUD/EUR, etc. all in one response).
+    Wraps get_data with last_n=1 (and a shorter cache TTL). Use this for
+    "what's the current X?" questions — it's a cheap, fast call.
+
+    Examples:
+        # Current cash rate target
+        resp = await latest("F1.1", series="cash_rate_target")
+        # → resp.records[0]: period='2026-05-06', value=3.85, unit='Per cent per annum'
+
+        # All AUD FX rates in one call (curated dashboard pattern)
+        resp = await latest("F11.1")
+        # → resp.records: latest aud_usd, aud_eur, aud_jpy, aud_cny, etc.
+
+        # Latest standard variable mortgage rate
+        resp = await latest("F6", series="housing_standard_variable")
+
+    When to use:
+        - You want the current value of an RBA indicator
+        - You want a current-snapshot of multiple series in one call
+          (e.g. `latest("F11.1")` returns every FX rate)
+        - You want sub-50ms warm-cache latency for chat integration
+
+    Returns:
+        DataResponse with one most-recent observation per series.
     """
     return await _get_data_impl(table_id, series, None, None, "records", last_n=1)
 
 
 @mcp.tool
 def list_curated() -> list[str]:
-    """List the RBA F-table IDs that have hand-curated plain-English support."""
+    """List the 5 RBA F-table IDs with hand-curated plain-English support.
+
+    These are the tables where get_data and latest accept plain-English
+    series keys (like 'cash_rate_target', 'aud_usd'). Other F-tables are
+    still queryable via raw RBA series IDs.
+
+    The 5 curated F-tables:
+        - F1.1 — Interest Rates and Yields: Money Market (incl. cash rate target)
+        - F4 — Money Market Operations
+        - F6 — Housing Lending Rates (standard variable, fixed, etc.)
+        - F11 — Exchange Rates (AUD vs major currencies, daily)
+        - F11.1 — Exchange Rate Indices (TWI, real TWI)
+
+    Example:
+        ids = list_curated()
+        # → ['F1.1', 'F11', 'F11.1', 'F4', 'F6']
+
+    When to use:
+        - You want to know which tables have plain-English support
+        - You're building a UI / agent that needs the supported set up front
+        - You want to plan which F-tables to call without inspecting each
+
+    Returns:
+        Sorted list of F-table IDs. Always 5 entries today.
+    """
     return curated.list_ids()
 
 

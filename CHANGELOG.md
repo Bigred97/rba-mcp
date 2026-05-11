@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.1.7 (2026-05-12)
+
+Glama Tool Definition Quality pass — every parameter on every tool now
+carries an explicit `description` and `examples` in the MCP JSON schema,
+and every docstring carries an `Examples:` + `When to use:` + `Returns:`
+block. Targets the Glama sub-scores that were sitting at 2/5 on
+Usage Guidelines across `list_curated`, `latest`, `describe_table`, and
+`get_data`. Parity with abs-mcp 0.2.11.
+
+- **Annotated parameter schemas.** All 5 tools (`search_tables`,
+  `describe_table`, `get_data`, `latest`, `list_curated`) now use
+  `Annotated[Type, Field(description=…, examples=[…])]` for every
+  parameter. JSON schemas exposed to clients now include human-readable
+  descriptions and 2–4 worked examples per parameter.
+- **Richer docstrings.** Each tool gains worked code examples (real
+  series keys, expected response shape), an explicit "When to use"
+  section, and a Returns block. The 5 curated F-tables are listed by
+  topic in `list_curated`'s docstring so an LLM can plan a multi-tool
+  call without needing to invoke it first.
+- No behavioural changes. All 103 unit tests still green.
+
 ## 0.1.6 (2026-05-11)
 
 First release published via **PyPI Trusted Publishing** (no API token in CI).
