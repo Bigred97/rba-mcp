@@ -117,10 +117,21 @@ def search_in_memory(
     # non-curated (e.g. "exchange rate" matches F12 "US Dollar Exchange Rates"
     # at 85.5; F11.1 needs the +30 to clear that gap on common queries).
     CURATED_BONUS = 30
-    rescored = [
-        (score + (CURATED_BONUS if summaries[idx].is_curated else 0), score, idx)
-        for _hay, score, idx in matches
-    ]
+    # Phrase-match bonus: if the full query phrase appears as a substring in
+    # the haystack entry, give a +20 boost. Lets strong non-curated matches
+    # (e.g. "yield curve" → F2/F2.1) compete with the curated bonus when a
+    # query is highly specific to a non-curated table. Curated tables that
+    # also phrase-match get both bonuses, so common queries still route
+    # correctly. (0.1.9 addition.)
+    PHRASE_BONUS = 20
+    q_lower = query.strip().lower()
+    rescored = []
+    for _hay, score, idx in matches:
+        bonus = CURATED_BONUS if summaries[idx].is_curated else 0
+        haystack_lower = haystack[idx].lower()
+        if q_lower and q_lower in haystack_lower:
+            bonus += PHRASE_BONUS
+        rescored.append((score + bonus, score, idx))
     rescored.sort(key=lambda t: (-t[0], -t[1]))
     return [summaries[idx] for _adj, _score, idx in rescored[:limit]]
 

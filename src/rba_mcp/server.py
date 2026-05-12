@@ -317,10 +317,15 @@ async def describe_table(
         series_list = []
         for key, cs in cd.series.items():
             start_date = None
+            end_date = None
             if cs.series_id in df.columns:
-                first_valid = df[cs.series_id].first_valid_index()
+                col = df[cs.series_id]
+                first_valid = col.first_valid_index()
                 if first_valid is not None:
                     start_date = first_valid.strftime("%Y-%m-%d")
+                last_valid = col.last_valid_index()
+                if last_valid is not None:
+                    end_date = last_valid.strftime("%Y-%m-%d")
             series_list.append(
                 SeriesDetail(
                     key=key,
@@ -329,6 +334,7 @@ async def describe_table(
                     unit=cs.unit,
                     frequency=summary.frequency,
                     start_date=start_date,
+                    end_date=end_date,
                 )
             )
         description = cd.description
@@ -346,10 +352,15 @@ async def describe_table(
         series_list = []
         for sid, meta in header.series.items():
             start_date = None
+            end_date = None
             if sid in df.columns:
-                first_valid = df[sid].first_valid_index()
+                col = df[sid]
+                first_valid = col.first_valid_index()
                 if first_valid is not None:
                     start_date = first_valid.strftime("%Y-%m-%d")
+                last_valid = col.last_valid_index()
+                if last_valid is not None:
+                    end_date = last_valid.strftime("%Y-%m-%d")
             series_list.append(
                 SeriesDetail(
                     key=sid,
@@ -358,6 +369,7 @@ async def describe_table(
                     unit=meta.unit,
                     frequency=meta.frequency,
                     start_date=start_date,
+                    end_date=end_date,
                 )
             )
         description = (

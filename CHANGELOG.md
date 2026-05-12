@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.1.9 (2026-05-13)
+
+Loop-audit value pass — three low-effort, high-value polish wins surfaced
+by a focused review of the customer-facing surface.
+
+- **New: `SeriesDetail.end_date`** — `describe_table` now reports the
+  latest non-null observation per series alongside `start_date`. An
+  LLM can answer "is this data fresh?" from a single `describe_table`
+  call without a follow-up `latest()`. Populated via
+  `df[col].last_valid_index()` in both curated and non-curated branches.
+- **Search: F2 / F2.1 keywords expanded.** Added `yield curve`,
+  `bond yields`, `australian government securities`, `ags`, and short
+  bond tenors (`2 year bond`, `3 year bond`, `5 year bond`) to the
+  `f2-data` and `f2.1-data` entries in `tables.yaml`. A user asking
+  "what's the Australian yield curve?" now lands on F2 / F2.1
+  immediately. Verified via two new search routing tests.
+- **Search ranker: phrase-match bonus (+20).** Added alongside the
+  existing curated +30 bonus. If the full query phrase appears as a
+  substring in a table's haystack, that table gets +20. Lets strong
+  non-curated matches (like "yield curve" → F2) compete with the
+  curated boost when a query is highly specific to a non-curated
+  table; curated tables that ALSO phrase-match still stack both
+  bonuses, so common queries route correctly.
+- **Tests**: +4 regressions — `end_date` populated for curated +
+  non-curated, "yield curve" → F2 routing, "bond yields" → F2
+  routing. 111 unit tests now (was 107).
+
 ## 0.1.8 (2026-05-12)
 
 Customer-flow audit fixes — surfaced when running rba-mcp against Claude

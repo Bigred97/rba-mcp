@@ -19,12 +19,12 @@ tables:
     name: Capital Market Yields – Government Bonds – Daily
     csv_filename: f2-data.csv
     frequency: Daily
-    search_keywords: [government bonds, yields, treasury bonds, capital market, 10 year bond]
+    search_keywords: [government bonds, yields, treasury bonds, capital market, 10 year bond, yield curve, bond yields, australian government securities, ags, 2 year bond, 3 year bond, 5 year bond]
   - id: F2.1
     name: Capital Market Yields – Government Bonds – Monthly
     csv_filename: f2.1-data.csv
     frequency: Monthly
-    search_keywords: [government bonds, yields, treasury bonds, capital market, 10 year bond, monthly]
+    search_keywords: [government bonds, yields, treasury bonds, capital market, 10 year bond, monthly, yield curve, bond yields, australian government securities, ags, 2 year bond, 3 year bond, 5 year bond]
   - id: F3
     name: Aggregate Measures of Australian Corporate Bond Yields
     csv_filename: f3-data.csv

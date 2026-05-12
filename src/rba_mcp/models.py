@@ -37,6 +37,7 @@ class SeriesDetail(BaseModel):
     unit: str | None = None
     frequency: str | None = None
     start_date: str | None = None            # earliest non-null observation, ISO date
+    end_date: str | None = None              # latest non-null observation, ISO date (freshness signal)
 
 
 class TableDetail(BaseModel):

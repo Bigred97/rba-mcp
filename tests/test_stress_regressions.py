@@ -330,3 +330,64 @@ async def test_describe_table_curated_populates_start_date():
     for s in detail.series:
         assert s.start_date and s.start_date[:4].isdigit()
         assert "2020" <= s.start_date[:4] <= "2026"
+
+
+# ----- Round-5 regression tests (post-0.1.8 customer-value audit, 0.1.9) -----
+
+async def test_describe_table_populates_end_date_for_curated():
+    """0.1.9: SeriesDetail now carries `end_date` (latest non-null
+    observation) so an LLM can check data freshness from describe_table
+    alone, without a separate latest() round-trip."""
+    detail = await server.describe_table("F11.1")
+    assert detail.is_curated
+    null_ends = [s.key for s in detail.series if s.end_date is None]
+    assert not null_ends, f"curated series with null end_date: {null_ends}"
+    # F11.1 is daily and should be fresh — every end_date should be in the
+    # current decade and not before the corresponding start_date.
+    for s in detail.series:
+        assert s.end_date and s.end_date[:4].isdigit()
+        assert s.start_date <= s.end_date, (
+            f"{s.key}: end_date {s.end_date} before start_date {s.start_date}"
+        )
+        assert s.end_date[:4] >= "2024"
+
+
+async def test_describe_table_populates_end_date_for_non_curated():
+    """Same end_date population for raw (non-curated) tables — bypass the
+    curated registry to force the non-curated branch. Some header series
+    may have no data column (genuinely empty in the CSV); those keep
+    end_date=None. Verify that series with start_date ALSO have end_date."""
+    from rba_mcp import curated as curated_mod
+    from unittest.mock import patch
+    with patch.object(curated_mod, "get", return_value=None):
+        detail = await server.describe_table("F11.1")
+    assert not detail.is_curated
+    populated = [s for s in detail.series if s.start_date is not None]
+    assert populated, "expected at least one series with populated dates"
+    for s in populated:
+        assert s.end_date and s.end_date[:4].isdigit(), (
+            f"series {s.key} has start_date={s.start_date} but end_date={s.end_date}"
+        )
+        assert s.start_date <= s.end_date
+
+
+async def test_search_yield_curve_routes_to_f2():
+    """0.1.9 added 'yield curve' / 'bond yields' keywords to F2 / F2.1
+    so a natural query routes to the right capital-market table.
+    Pre-0.1.9 the keywords were only 'government bonds, yields,
+    treasury bonds, capital market, 10 year bond' which missed
+    'yield curve' as a phrase."""
+    results = await server.search_tables(query="yield curve", limit=10)
+    ids = [r.id for r in results[:5]]
+    assert "F2" in ids or "F2.1" in ids, (
+        f"yield curve query should surface F2/F2.1 in top 5, got: {ids}"
+    )
+
+
+async def test_search_bond_yields_routes_to_f2():
+    """Companion to the yield-curve test — 'bond yields' must also route."""
+    results = await server.search_tables(query="bond yields", limit=10)
+    ids = [r.id for r in results[:5]]
+    assert "F2" in ids or "F2.1" in ids, (
+        f"bond yields query should surface F2/F2.1 in top 5, got: {ids}"
+    )
