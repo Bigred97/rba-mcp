@@ -10,7 +10,7 @@
 
 ![rba-mcp answering "Show me AUD against USD, EUR, GBP and the trade-weighted index since 2024" in Claude Desktop — four metric cards, rebased line chart, macro-context analysis](docs/demo.png)
 
-Companion to [abs-mcp](https://github.com/Bigred97/abs-mcp) (ABS macro stats) and [ato-mcp](https://github.com/Bigred97/ato-mcp) (ATO tax + ACNC charity data) — together the three cover the most-asked Australian official data.
+Companion to [abs-mcp](https://github.com/Bigred97/abs-mcp) (ABS macro stats), [ato-mcp](https://github.com/Bigred97/ato-mcp) (ATO tax + ACNC charity data), and [au-weather-mcp](https://github.com/Bigred97/au-weather-mcp) (Australian weather via Open-Meteo + BOM) — together the four cover the most-asked Australian official data.
 
 ## What you can ask
 
@@ -167,10 +167,11 @@ You don't have to know what `FIRMMCRT` or `FXRUSD` mean — and neither does Cla
 
 ## Sister servers
 
-The three packages run side-by-side in any MCP client; Claude disambiguates via the server prefix (`rba:latest` vs `abs:latest` vs `ato:get_data`).
+The four packages run side-by-side in any MCP client; Claude disambiguates via the server prefix (`rba:latest` vs `abs:latest` vs `ato:get_data` vs `weather:latest`).
 
 - **[abs-mcp](https://github.com/Bigred97/abs-mcp)** — Australian Bureau of Statistics. Labour force, CPI, GDP, wages, housing approvals, lending, population.
 - **[ato-mcp](https://github.com/Bigred97/ato-mcp)** — Australian Taxation Office + ACNC. Personal tax by postcode, company tax by industry, corporate tax transparency for every $100M+ entity, super contributions by age, live charity register.
+- **[au-weather-mcp](https://github.com/Bigred97/au-weather-mcp)** — Australian weather. 21 curated locations + postcode/place-name lookup. Current observations, 16-day forecasts, 80yr historical archive. Backed by Open-Meteo (which aggregates BOM data under licence).
 
 See [examples/claude_desktop_config_both.json](examples/claude_desktop_config_both.json) for an example multi-server config.
 
