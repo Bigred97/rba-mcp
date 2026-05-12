@@ -260,3 +260,73 @@ async def test_get_data_other_non_string_format_types():
                 table_id="F11.1", series="aud_usd", format=bad  # type: ignore[arg-type]
             )
         await server.reset_client_for_tests()
+
+
+# ----- Round-4 regression tests (post-0.1.7 customer-flow audit) -----
+
+async def test_get_data_accepts_int_year_for_dates():
+    """Bug #10 regression (0.1.8): MCP / LLM clients often send a year as
+    a JSON number (`start_date=2024`) rather than a string (`"2024"`).
+    Pre-0.1.8 this errored at the Pydantic boundary with a verbose
+    'Input should be a valid string' message. Now: int years are
+    coerced to strings transparently."""
+    resp = await server.get_data(
+        table_id="F1.1",
+        series="cash_rate_target",
+        start_date=2024,  # type: ignore[arg-type]
+        end_date=2024,    # type: ignore[arg-type]
+    )
+    # 12 monthly observations across calendar year 2024
+    assert len(resp.records) >= 12
+    months = sorted({r.period[:7] for r in resp.records})
+    assert months[0].endswith("01"), f"first month wrong: {months[0]}"
+    assert months[-1].endswith("12"), f"last month wrong: {months[-1]}"
+
+
+async def test_get_data_int_dates_match_string_dates():
+    """Equivalence: passing int 2024 must produce the same result as
+    passing the string '2024'."""
+    resp_int = await server.get_data(
+        table_id="F1.1", series="cash_rate_target",
+        start_date=2024, end_date=2024,  # type: ignore[arg-type]
+    )
+    await server.reset_client_for_tests()
+    resp_str = await server.get_data(
+        table_id="F1.1", series="cash_rate_target",
+        start_date="2024", end_date="2024",
+    )
+    assert len(resp_int.records) == len(resp_str.records)
+    int_periods = [r.period for r in resp_int.records]
+    str_periods = [r.period for r in resp_str.records]
+    assert int_periods == str_periods
+
+
+async def test_get_data_rejects_bool_for_dates():
+    """`isinstance(True, int) is True` in Python — but `True` is not a
+    sensible year. The 0.1.8 int-coerce explicitly excludes bools so
+    True/False still raise a clean type error."""
+    import pytest
+    for bad in [True, False]:
+        with pytest.raises(ValueError, match="must be a string"):
+            await server.get_data(
+                table_id="F11.1", series="aud_usd",
+                start_date=bad,  # type: ignore[arg-type]
+            )
+        await server.reset_client_for_tests()
+
+
+async def test_describe_table_curated_populates_start_date():
+    """Bug #11 regression (0.1.8): describe_table for curated tables used
+    to leave SeriesDetail.start_date null because the curated branch
+    skipped the CSV-fetch + first_valid_index step the non-curated
+    branch did. Now both branches populate it. The LLM needs this to
+    pick a sensible date range without trial-and-error queries."""
+    detail = await server.describe_table("F11.1")
+    assert detail.is_curated
+    # Every series should have a real ISO date now, not null
+    null_starts = [s.key for s in detail.series if s.start_date is None]
+    assert not null_starts, f"curated series with null start_date: {null_starts}"
+    # F11.1 daily data starts in 2023 — sanity-check the range
+    for s in detail.series:
+        assert s.start_date and s.start_date[:4].isdigit()
+        assert "2020" <= s.start_date[:4] <= "2026"

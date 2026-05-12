@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.1.8 (2026-05-12)
+
+Customer-flow audit fixes — surfaced when running rba-mcp against Claude
+Desktop end-to-end. Two real UX gaps + a major distribution-side warning.
+
+- **Fix: `start_date` and `end_date` accept int years.** MCP / LLM clients
+  often send a year as a JSON number (`start_date=2024`) instead of a
+  string (`"2024"`). Pre-0.1.8 this errored at the Pydantic boundary
+  with a verbose "Input should be a valid string" message. Now: the
+  Annotated type is `str | int | None` and `_validate_period` coerces
+  int → str transparently. Bool is explicitly excluded from coercion
+  (since `isinstance(True, int)` is `True` in Python) so `True`/`False`
+  still raise a clean type error rather than becoming "1"/"0".
+- **Fix: `describe_table` populates `SeriesDetail.start_date` for
+  curated tables.** The non-curated branch already fetched the CSV and
+  ran `df[sid].first_valid_index()`; the curated branch shortcut to
+  YAML metadata only and left `start_date` null on every curated
+  series. The LLM needs this to pick a sensible date range without
+  trial-and-error queries — e.g. F11 starts 2010, F11.1 starts 2023.
+  Now both branches populate the field.
+- **README + example configs: recommend `uvx --upgrade rba-mcp` for
+  Claude Desktop / Cursor.** Plain `uvx rba-mcp` (no flag) uses
+  whatever wheel is cached and the long-lived MCP child process holds
+  it — new PyPI releases never reach a running install until the user
+  manually `uvx --refresh`es and fully quits Claude Desktop. Found in
+  the wild during a customer-flow audit: an install was running 0.1.2
+  against PyPI 0.1.7, five releases of fixes never adopted. `--upgrade`
+  makes uvx check PyPI on each launch. Same fix shipped to abs-mcp's
+  example configs.
+- **Tests**: +4 regressions in `tests/test_stress_regressions.py`
+  (int year accepted; int = str equivalence; bool still rejected;
+  curated `start_date` populated). 107 unit tests now (was 103).
+
 ## 0.1.7 (2026-05-12)
 
 Glama Tool Definition Quality pass — every parameter on every tool now

@@ -10,7 +10,7 @@
 
 ![rba-mcp answering "Show me AUD against USD, EUR, GBP and the trade-weighted index since 2024" in Claude Desktop — four metric cards, rebased line chart, macro-context analysis](docs/demo.png)
 
-Companion to [abs-mcp](https://github.com/Bigred97/abs-mcp) — together they cover the most-asked Australian economic data.
+Companion to [abs-mcp](https://github.com/Bigred97/abs-mcp) (ABS macro stats) and [ato-mcp](https://github.com/Bigred97/ato-mcp) (ATO tax + ACNC charity data) — together the three cover the most-asked Australian official data.
 
 ## What you can ask
 
@@ -31,7 +31,7 @@ Every answer comes with the period, units (Per cent per annum, USD per AUD, etc.
 
 ```bash
 # After publish:
-uvx rba-mcp
+uvx --upgrade rba-mcp
 
 # Local dev:
 uv pip install -e .
@@ -46,11 +46,13 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "rba": {
       "command": "uvx",
-      "args": ["rba-mcp"]
+      "args": ["--upgrade", "rba-mcp"]
     }
   }
 }
 ```
+
+> **Why `--upgrade`?** `uvx rba-mcp` (without the flag) uses whatever wheel is cached and never adopts new PyPI releases on its own — Claude Desktop's MCP child process keeps running the same wheel until you fully quit the app and refresh the cache by hand. `--upgrade` makes uvx check PyPI on each launch and pull a newer release if one exists. Recommended for everyone except offline-first / pinned-version workflows. To verify which version is currently serving you, look at the `server_version` field on any `DataResponse` (added in 0.1.5).
 
 If you also have `abs-mcp` installed, both servers run side-by-side. Claude disambiguates with the server prefix (`rba:get_data` vs `abs:get_data`).
 
@@ -76,7 +78,7 @@ Add to `~/.cursor/mcp.json` (or workspace `.cursor/mcp.json`):
   "mcpServers": {
     "rba": {
       "command": "uvx",
-      "args": ["rba-mcp"]
+      "args": ["--upgrade", "rba-mcp"]
     }
   }
 }
@@ -163,9 +165,14 @@ Claude picks the right tool, fills in the curated series keys, calls the live RB
 
 You don't have to know what `FIRMMCRT` or `FXRUSD` mean — and neither does Claude. The server's curated YAMLs map plain-English keys (`cash_rate_target`, `aud_usd`) to RBA series IDs and surface unit attribution + the CC-BY 4.0 attribution string in every response.
 
-## Companion server
+## Sister servers
 
-[abs-mcp](https://github.com/Bigred97/abs-mcp) covers the Australian Bureau of Statistics side — labour force, CPI, GDP, wages, housing approvals, lending, population. Install both for the AU macro stack; they run side-by-side in any MCP client and Claude disambiguates via the server prefix (`rba:latest` vs `abs:latest`). See [examples/claude_desktop_config_both.json](examples/claude_desktop_config_both.json).
+The three packages run side-by-side in any MCP client; Claude disambiguates via the server prefix (`rba:latest` vs `abs:latest` vs `ato:get_data`).
+
+- **[abs-mcp](https://github.com/Bigred97/abs-mcp)** — Australian Bureau of Statistics. Labour force, CPI, GDP, wages, housing approvals, lending, population.
+- **[ato-mcp](https://github.com/Bigred97/ato-mcp)** — Australian Taxation Office + ACNC. Personal tax by postcode, company tax by industry, corporate tax transparency for every $100M+ entity, super contributions by age, live charity register.
+
+See [examples/claude_desktop_config_both.json](examples/claude_desktop_config_both.json) for an example multi-server config.
 
 ## Data attribution
 

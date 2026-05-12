@@ -122,6 +122,12 @@ def _validate_series(series: Any) -> str | list[str] | None:
 def _validate_period(value: Any, field_name: str) -> str | None:
     if value is None:
         return None
+    # MCP / LLM clients often send a year as a JSON number rather than a
+    # string (`start_date=2024` instead of `start_date="2024"`). Coerce
+    # int → str so both forms work. Excludes bool (which subclasses int)
+    # to keep `True`/`False` rejected as type errors.
+    if isinstance(value, int) and not isinstance(value, bool):
+        value = str(value)
     if not isinstance(value, str):
         raise ValueError(
             f"{field_name} must be a string in 'YYYY', 'YYYY-MM', or 'YYYY-MM-DD' format, "
@@ -294,16 +300,37 @@ async def describe_table(
     cd = curated.get(table_id)
 
     if cd is not None:
-        series_list = [
-            SeriesDetail(
-                key=key,
-                series_id=cs.series_id,
-                description=cs.description,
-                unit=cs.unit,
-                frequency=summary.frequency,
+        # Fetch the CSV so we can populate `start_date` per series — the
+        # earliest non-null observation. The non-curated branch did this
+        # already; the curated branch used to skip it (start_date was
+        # always null in describe_table for curated tables, hiding info
+        # the LLM needs to pick a sensible date range — 0.1.8 fix).
+        client = await _get_client()
+        try:
+            body = await client.fetch_table_csv(csv_filename)
+        except RBAAPIError as e:
+            raise ValueError(
+                f"Could not fetch RBA table {table_id} ({csv_filename}). ({e})"
+            ) from e
+        _, df = parse_csv(body)
+
+        series_list = []
+        for key, cs in cd.series.items():
+            start_date = None
+            if cs.series_id in df.columns:
+                first_valid = df[cs.series_id].first_valid_index()
+                if first_valid is not None:
+                    start_date = first_valid.strftime("%Y-%m-%d")
+            series_list.append(
+                SeriesDetail(
+                    key=key,
+                    series_id=cs.series_id,
+                    description=cs.description,
+                    unit=cs.unit,
+                    frequency=summary.frequency,
+                    start_date=start_date,
+                )
             )
-            for key, cs in cd.series.items()
-        ]
         description = cd.description
         is_curated = True
     else:
@@ -511,20 +538,21 @@ async def get_data(
         ),
     ] = None,
     start_date: Annotated[
-        str | None,
+        str | int | None,
         Field(
             description=(
                 "Inclusive start date. Accepts 'YYYY', 'YYYY-MM', or 'YYYY-MM-DD'. "
+                "An int year (e.g. 2024) is also accepted and treated as 'YYYY'. "
                 "Semantic-checked: '2024-13' or '----' rejected at the boundary."
             ),
-            examples=["2024", "2024-03", "2024-03-15"],
+            examples=["2024", "2024-03", "2024-03-15", 2024],
         ),
     ] = None,
     end_date: Annotated[
-        str | None,
+        str | int | None,
         Field(
             description="Inclusive end date. Same format as start_date.",
-            examples=["2025", "2025-12", "2025-12-31"],
+            examples=["2025", "2025-12", "2025-12-31", 2025],
         ),
     ] = None,
     format: Annotated[

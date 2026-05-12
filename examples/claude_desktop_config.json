@@ -2,7 +2,7 @@
   "mcpServers": {
     "rba": {
       "command": "uvx",
-      "args": ["rba-mcp"]
+      "args": ["--upgrade", "rba-mcp"]
     }
   }
 }
