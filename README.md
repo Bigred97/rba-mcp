@@ -16,16 +16,18 @@ Companion to [abs-mcp](https://github.com/Bigred97/abs-mcp) (ABS macro stats), [
 
 Once installed, your LLM can answer questions like:
 
-| Question | Real response |
+| Question | Real response (verified) |
 |---|---|
-| What's the current RBA cash rate? | RBA Cash Rate Target, latest month |
-| What's AUD/USD today? | Latest daily exchange rate |
-| Show me AUD vs major currencies in 2024 | Multi-series query with monthly observations |
-| What's the average mortgage rate? | Owner-occupier variable, outstanding loans |
-| What rate are 12-month term deposits at? | Latest from F4 |
-| What's the trade-weighted index trend? | TWI series back to 1983 |
+| What's the current RBA cash rate? | **4.10%** (Apr 2026) |
+| What's the 3-month bank bill yield? | **4.34%** (Apr 2026) |
+| AUD/USD today? | **0.7231** (11 May 2026) |
+| Trade-weighted index? | **66.9** (11 May 2026) |
+| Average mortgage rate (owner-occupier variable)? | **6.00%** (Mar 2026) |
+| 12-month term deposit rate? | **5.00%** (Apr 2026) |
+| Show me AUD vs USD/EUR/GBP since 2024 | Daily series, all three currencies, one call |
+| TWI trend since 1983? | Monthly observations going back 40+ years |
 
-Every answer comes with the period, units (Per cent per annum, USD per AUD, etc.), and a link back to the RBA source.
+Every answer comes with the period, units (Per cent per annum, USD per AUD, etc.), the publication date, and a link back to the RBA source. The MCP wraps RBA's CSV statistical tables and exposes them through 5 plain-English tools.
 
 ## Install
 
@@ -136,9 +138,28 @@ RBA series use ISO-style date formats. Pass `start_date` / `end_date` as:
 
 | Format | Example | Use for |
 |---|---|---|
-| `YYYY` | `"2024"` | Year start |
-| `YYYY-MM` | `"2024-03"` | Month start |
+| `YYYY` | `"2024"` *or* `2024` | Calendar year (int year also accepted, 0.1.8+) |
+| `YYYY-MM` | `"2024-03"` | Calendar month (`end_date="2024-12"` includes all of December — fixed in 0.1.4) |
 | `YYYY-MM-DD` | `"2024-03-15"` | Specific day (daily tables only) |
+
+`start_date` snaps to the first instant of its period; `end_date` snaps to the last. So `start="2024", end="2024"` returns "all of 2024", not just 1 January.
+
+## Verifying your install
+
+The running MCP server reports its version on every `DataResponse`:
+
+```json
+{ ..., "server_version": "0.1.8", ... }
+```
+
+If you see a value below the [latest on PyPI](https://pypi.org/project/rba-mcp/), your `uvx` cache is stale. Either switch to `["--upgrade", "rba-mcp"]` in your config (recommended), or refresh manually:
+
+```bash
+uvx --refresh rba-mcp --help
+# Then fully quit and relaunch Claude Desktop (Cmd+Q — window-close is not enough).
+```
+
+Claude Desktop's MCP child processes are long-lived; refreshing the wheel cache does **not** restart an already-running server. Cold app launch is required.
 
 ## Development
 
