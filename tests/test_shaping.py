@@ -98,3 +98,63 @@ def test_build_response_csv_format():
     assert resp.csv is not None
     assert resp.records == []
     assert resp.period["start"] is not None  # derived from underlying records
+
+
+def test_data_response_has_source_url_canonical_field():
+    """Wave-2 interop: both source_url and rba_url are populated and equal."""
+    body = (FIXTURES / "f11-data.csv").read_bytes()
+    header, df = parse_csv(body)
+    f11 = curated_mod.get("F11")
+    resp = build_response(
+        table_id="F11",
+        table_name="Exchange Rates",
+        df=df[["FXRUSD"]],
+        header=header,
+        curated=f11,
+        fmt="records",
+        user_query={},
+        rba_url="https://www.rba.gov.au/statistics/tables/#f11",
+    )
+    assert resp.source_url is not None
+    assert resp.source_url == resp.rba_url
+    assert resp.source_url == "https://www.rba.gov.au/statistics/tables/#f11"
+
+
+def test_data_response_row_count_matches_records():
+    """Wave-2 interop: row_count tracks len(records) for records format."""
+    body = (FIXTURES / "f11-data.csv").read_bytes()
+    header, df = parse_csv(body)
+    f11 = curated_mod.get("F11")
+    resp = build_response(
+        table_id="F11",
+        table_name="Exchange Rates",
+        df=df[["FXRUSD"]],
+        header=header,
+        curated=f11,
+        fmt="records",
+        user_query={},
+        rba_url="https://www.rba.gov.au/statistics/tables/#f11",
+    )
+    assert resp.row_count == len(resp.records)
+    assert resp.row_count > 0
+
+
+def test_data_response_row_count_empty_df():
+    """Wave-2 interop: row_count is 0 when records is empty."""
+    body = (FIXTURES / "f11-data.csv").read_bytes()
+    header, df = parse_csv(body)
+    f11 = curated_mod.get("F11")
+    # Empty DataFrame → no records
+    empty_df = df[["FXRUSD"]].iloc[0:0]
+    resp = build_response(
+        table_id="F11",
+        table_name="Exchange Rates",
+        df=empty_df,
+        header=header,
+        curated=f11,
+        fmt="records",
+        user_query={},
+        rba_url="https://www.rba.gov.au/statistics/tables/#f11",
+    )
+    assert resp.row_count == 0
+    assert resp.records == []

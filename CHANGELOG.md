@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0] - 2026-05-15
+
+### Added
+
+- **DataResponse.source_url**: canonical click-through URL field, populated
+  alongside the legacy `rba_url` alias. Cross-sister consumers can now read
+  `.source_url` uniformly across the portfolio. `rba_url` remains populated
+  with the same value for backward compatibility.
+- **DataResponse.row_count**: number of observation rows in `records`
+  (`int`, defaults to `0`). Brings rba-mcp in line with the canonical
+  `DataResponse` envelope used by the rest of the portfolio.
+
 ## 0.1.11 (2026-05-15)
 
 Error-message sweep — quality dimension #5 in CLAUDE.md. Rejection messages

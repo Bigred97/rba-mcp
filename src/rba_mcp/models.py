@@ -64,12 +64,25 @@ class DataResponse(BaseModel):
     query: dict[str, Any] = Field(default_factory=dict)
     period: dict[str, str | None] = Field(default_factory=lambda: {"start": None, "end": None})
     unit: str | None = None
+    row_count: int = Field(default=0, description="Number of observation rows in records.")
     records: list[Observation] | list[dict[str, Any]] = Field(default_factory=list)
     csv: str | None = None
     source: str = "Reserve Bank of Australia"
     attribution: str = _RBA_ATTRIBUTION
     retrieved_at: datetime
-    rba_url: str
+    source_url: str = Field(
+        description=(
+            "Canonical click-through URL. Same value as rba_url; both populated "
+            "for backward compat."
+        )
+    )
+    rba_url: str = Field(
+        description=(
+            "Click-through URL for this table's source page. rba-mcp legacy "
+            "name — prefer source_url (canonical) for new code. Both fields are "
+            "populated identically."
+        )
+    )
     # Echoed in every response so testers can verify which wheel served the
     # call — uvx caches per-version and stale caches have caused real "is
     # this fixed?" confusion. `pip install -U` / `uvx --refresh` to update.

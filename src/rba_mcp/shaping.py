@@ -153,8 +153,10 @@ def build_response(
         query=user_query,
         period={"start": start_date, "end": end_date},
         unit=response_unit,
+        row_count=len(records),
         records=records,
         csv=csv_text,
         retrieved_at=datetime.now(timezone.utc),
+        source_url=rba_url,
         rba_url=rba_url,
     )
