@@ -74,6 +74,14 @@ class DataResponse(BaseModel):
     # call — uvx caches per-version and stale caches have caused real "is
     # this fixed?" confusion. `pip install -U` / `uvx --refresh` to update.
     server_version: str = Field(default_factory=lambda: _get_server_version())
+    # Set when the RBA CDN was unreachable and we served a cached payload
+    # past its normal TTL. Agents should surface `stale=True` to end users
+    # (e.g. "RBA CDN reported 503; showing data from 12 minutes ago").
+    stale: bool = False
+    stale_reason: str | None = None
+    # Set when `latest()` truncated a large response to a limit. Original
+    # row count goes here so agents can detect + surface the cap.
+    truncated_at: int | None = None
 
 
 def _get_server_version() -> str:

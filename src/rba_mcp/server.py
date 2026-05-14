@@ -19,7 +19,7 @@ from fastmcp import FastMCP
 from pydantic import Field
 
 from . import curated, tables
-from .client import RBAAPIError, RBAClient
+from .client import RBAAPIError, RBAClient, get_stale_signal, reset_stale_signal
 from .models import (
     DataResponse,
     SeriesDetail,
@@ -398,6 +398,9 @@ async def _get_data_impl(
     fmt: str,
     last_n: int | None = None,
 ) -> DataResponse:
+    # Reset the graceful-degradation flag at the start of each tool call so
+    # we only report staleness introduced by THIS call's fetches.
+    reset_stale_signal()
     table_id = _normalize_table_id(table_id)
     series_validated = _validate_series(series)
     start_date_validated = _validate_period(start_date, "start_date")
@@ -509,7 +512,7 @@ async def _get_data_impl(
     if last_n is not None and not df.empty:
         df = df.tail(last_n)
 
-    return build_response(
+    resp = build_response(
         table_id=table_id,
         table_name=summary.name,
         df=df,
@@ -521,6 +524,13 @@ async def _get_data_impl(
         start_date=start_date_validated,
         end_date=end_date_validated,
     )
+    # If the fetch served a stale-cache fallback because the upstream CDN
+    # was unreachable, propagate it to the response.
+    stale, reason = get_stale_signal()
+    if stale:
+        resp.stale = True
+        resp.stale_reason = reason
+    return resp
 
 
 @mcp.tool
