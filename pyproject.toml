@@ -10,7 +10,12 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Harry Vass" }]
-keywords = ["mcp", "rba", "australia", "interest-rates", "fx", "claude", "fastmcp"]
+keywords = [
+    "mcp", "model-context-protocol", "claude", "fastmcp",
+    "rba", "reserve-bank-of-australia", "cash-rate", "interest-rates", "fx", "exchange-rates",
+    "australia", "australian", "public-data", "government-data",
+    "economy", "monetary-policy", "data-api",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -42,7 +47,11 @@ rba-mcp = "rba_mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/Bigred97/rba-mcp"
+Documentation = "https://github.com/Bigred97/rba-mcp#readme"
+Repository = "https://github.com/Bigred97/rba-mcp"
 Issues = "https://github.com/Bigred97/rba-mcp/issues"
+Changelog = "https://github.com/Bigred97/rba-mcp/blob/main/CHANGELOG.md"
+PyPI = "https://pypi.org/project/rba-mcp/"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/rba_mcp"]

@@ -1,9 +1,10 @@
 # rba-mcp
 
-[![tests](https://github.com/Bigred97/rba-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/Bigred97/rba-mcp/actions/workflows/test.yml)
 [![PyPI](https://img.shields.io/pypi/v/rba-mcp.svg)](https://pypi.org/project/rba-mcp/)
 [![Python](https://img.shields.io/pypi/pyversions/rba-mcp.svg)](https://pypi.org/project/rba-mcp/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License](https://img.shields.io/pypi/l/rba-mcp.svg)](https://github.com/Bigred97/rba-mcp/blob/main/LICENSE)
+[![Tests](https://github.com/Bigred97/rba-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/Bigred97/rba-mcp/actions/workflows/test.yml)
+[![CodeQL](https://github.com/Bigred97/rba-mcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/Bigred97/rba-mcp/actions/workflows/codeql.yml)
 [![Glama MCP server quality](https://glama.ai/mcp/servers/Bigred97/rba-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Bigred97/rba-mcp)
 
 **Ask Claude about Australian interest rates, exchange rates, and lending rates and get real, current numbers** — not "I don't have access to that data." This MCP server gives Claude (and other MCP clients like Cursor) live access to the [Reserve Bank of Australia's statistical tables](https://www.rba.gov.au/statistics/tables/), with curated mappings for the most-asked indicators.
@@ -186,13 +187,20 @@ Claude picks the right tool, fills in the curated series keys, calls the live RB
 
 You don't have to know what `FIRMMCRT` or `FXRUSD` mean — and neither does Claude. The server's curated YAMLs map plain-English keys (`cash_rate_target`, `aud_usd`) to RBA series IDs and surface unit attribution + the CC-BY 4.0 attribution string in every response.
 
-## Sister servers
+## Sister MCPs (Australian Public Data portfolio)
 
-The four packages run side-by-side in any MCP client; Claude disambiguates via the server prefix (`rba:latest` vs `abs:latest` vs `ato:get_data` vs `weather:latest`).
+The portfolio runs side-by-side in any MCP client; Claude disambiguates via the server prefix (`rba:latest` vs `abs:latest` vs `ato:get_data` vs `weather:latest`).
 
-- **[abs-mcp](https://github.com/Bigred97/abs-mcp)** — Australian Bureau of Statistics. Labour force, CPI, GDP, wages, housing approvals, lending, population.
-- **[ato-mcp](https://github.com/Bigred97/ato-mcp)** — Australian Taxation Office + ACNC. Personal tax by postcode, company tax by industry, corporate tax transparency for every $100M+ entity, super contributions by age, live charity register.
-- **[au-weather-mcp](https://github.com/Bigred97/au-weather-mcp)** — Australian weather. 21 curated locations + postcode/place-name lookup. Current observations, 16-day forecasts, 80yr historical archive. Backed by Open-Meteo (which aggregates BOM data under licence).
+- [abs-mcp](https://pypi.org/project/abs-mcp/) — Australian Bureau of Statistics (CPI, unemployment, ERP, building approvals)
+- **rba-mcp** — this one. Reserve Bank of Australia (cash rate, lending stats, exchange rates).
+- [ato-mcp](https://pypi.org/project/ato-mcp/) — Australian Taxation Office (tax stats, ACNC charities)
+- [apra-mcp](https://pypi.org/project/apra-mcp/) — Australian Prudential Regulation Authority (banking, insurance, super)
+- [aihw-mcp](https://pypi.org/project/aihw-mcp/) — Australian Institute of Health and Welfare
+- [asic-mcp](https://pypi.org/project/asic-mcp/) — Australian Securities and Investments Commission (company registers)
+- [aemo-mcp](https://pypi.org/project/aemo-mcp/) — Australian Energy Market Operator (NEM dispatch, spot prices, generation)
+- [au-weather-mcp](https://pypi.org/project/au-weather-mcp/) — Open-Meteo (Bureau of Meteorology aggregator)
+- [wgea-mcp](https://pypi.org/project/wgea-mcp/) — Workplace Gender Equality Agency
+- [aus-identity](https://pypi.org/project/aus-identity/) — Postcode / state / ABN normalisation helper used by all sisters
 
 See [examples/claude_desktop_config_both.json](examples/claude_desktop_config_both.json) for an example multi-server config.
 
