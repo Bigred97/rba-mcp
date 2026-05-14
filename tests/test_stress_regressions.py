@@ -13,7 +13,7 @@ import pytest
 from rba_mcp import server
 from rba_mcp.cache import Cache
 from rba_mcp.client import RBAClient
-from rba_mcp.parsing import filter_by_dates, parse_csv
+from rba_mcp.parsing import filter_by_dates
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

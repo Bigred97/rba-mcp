@@ -8,7 +8,6 @@ import pytest
 
 from rba_mcp.parsing import (
     CSVParseError,
-    SeriesMeta,
     TableHeader,
     filter_by_dates,
     filter_by_series,
