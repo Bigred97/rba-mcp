@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.1.11 (2026-05-15)
+
+Error-message sweep — quality dimension #5 in CLAUDE.md. Rejection messages
+now suggest the correction, not just describe the rejection.
+
+Every weak `ValueError` raise site in `server.py` and `curated.py` was
+rewritten to carry an actionable hint: "Try X", "Did you mean X?" (via
+`difflib.get_close_matches`, stdlib — no new deps), "Valid options: ...",
+and / or a `describe_table()` / `list_curated()` pointer. The CLAUDE.md
+textbook example (invalid raw RBA series ID shape) now produces:
+
+> `Series ID 'fx rusd' contains invalid characters. RBA series IDs are
+> uppercase letters + digits, optionally with underscores or hyphens
+> (e.g. 'FXRUSD', 'FIRMMCRT', 'FLRHOOVA'). Did you mean 'FXRUSD'? Try
+> describe_table('F11.1') (FX) or describe_table('F1.1') (money market)
+> to see valid series IDs for a table.`
+
+- **server.py** — 8 raise sites rewritten: series-list type errors,
+  `series` type fallback, `_validate_series_for_url` shape rejection (the
+  prime example), `limit` lower-bound / type, the three `RBAAPIError` →
+  `ValueError` wrappers in `describe_table` + `_get_data_impl`, and the
+  `Unknown format` raise now adds a difflib "Did you mean?" alongside the
+  existing "Valid options" list.
+- **curated.py** — `Unknown series` raise now runs difflib against both
+  curated keys and raw series IDs to suggest the likely correction;
+  empty-list and empty-value raises now include a worked example key and
+  `describe_table()` pointer.
+- **+2 regression tests** in `test_server_validation.py` locking in the
+  new actionable shape (Did-you-mean + describe_table pointer on curated
+  typo, and shape-hint + describe_table pointer on invalid raw ID).
+- 117 unit tests now (was 115). 10× zero-flake green.
+- No new dependencies. No exception-type changes.
+
 ## 0.1.10 (2026-05-15)
 
 Graceful degradation — quality dimension #4 in CLAUDE.md. Pattern ported

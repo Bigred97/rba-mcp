@@ -11,6 +11,7 @@ with "Try X" hints.
 from __future__ import annotations
 
 import asyncio
+import difflib
 import re
 from datetime import datetime
 from typing import Annotated, Any, Literal
@@ -107,15 +108,26 @@ def _validate_series(series: Any) -> str | list[str] | None:
         for s in series:
             if not isinstance(s, str):
                 raise ValueError(
-                    f"series list entries must be strings, got {type(s).__name__}."
+                    f"series list entries must be strings, got {type(s).__name__}. "
+                    "Each entry should be a curated key (e.g. 'aud_usd') or a raw RBA "
+                    "series ID (e.g. 'FXRUSD'). "
+                    "Try describe_table('F11.1') to see valid keys for a curated table."
                 )
             stripped = s.strip()
             if not stripped:
-                raise ValueError("series list contains an empty string.")
+                raise ValueError(
+                    "series list contains an empty string. "
+                    "Each entry should be a non-empty curated key like 'aud_usd' or a "
+                    "raw RBA series ID like 'FXRUSD'. "
+                    "Try describe_table('<table_id>') to list valid series."
+                )
             out.append(stripped)
         return out
     raise ValueError(
-        f"series must be a string or list of strings, got {type(series).__name__}."
+        f"series must be a string or list of strings, got {type(series).__name__}. "
+        "Pass a single key (e.g. 'aud_usd'), a list of keys "
+        "(e.g. ['aud_usd', 'aud_eur']), or omit to query all curated series. "
+        "Try describe_table('<table_id>') to discover valid keys."
     )
 
 
@@ -166,15 +178,43 @@ def _is_valid_period(s: str) -> bool:
     return False
 
 
+def _known_series_ids() -> list[str]:
+    """All canonical RBA series IDs known across curated tables (for "Did you mean?")."""
+    known: set[str] = set()
+    for cid in curated.list_ids():
+        ct = curated.get(cid)
+        if ct is None:
+            continue
+        for s in ct.series.values():
+            known.add(s.series_id)
+    return sorted(known)
+
+
 def _validate_series_for_url(series_ids: list[str]) -> None:
     """Raw RBA series IDs flow into the URL via the cache key — validate shape."""
     for sid in series_ids:
         if not _SERIES_ID_PATTERN.match(sid):
-            raise ValueError(
-                f"Series ID {sid!r} contains invalid characters — "
-                "RBA series IDs use only letters, digits, underscores, and hyphens "
-                "(e.g. 'FXRUSD', 'FIRMMCRT')."
+            hint = (
+                f"Series ID {sid!r} contains invalid characters. "
+                "RBA series IDs are uppercase letters + digits, optionally with "
+                "underscores or hyphens (e.g. 'FXRUSD', 'FIRMMCRT', 'FLRHOOVA')."
             )
+            # Best-effort "Did you mean?" against known curated series IDs —
+            # cheap (~30 IDs) and harmless when there's no close match.
+            try:
+                candidates = _known_series_ids()
+                close = difflib.get_close_matches(
+                    sid.upper(), candidates, n=1, cutoff=0.6
+                )
+                if close:
+                    hint += f" Did you mean '{close[0]}'?"
+            except Exception:
+                pass
+            hint += (
+                " Try describe_table('F11.1') (FX) or describe_table('F1.1') "
+                "(money market) to see valid series IDs for a table."
+            )
+            raise ValueError(hint)
 
 
 @mcp.tool
@@ -235,10 +275,15 @@ async def search_tables(
         )
     if isinstance(limit, bool) or not isinstance(limit, int):
         raise ValueError(
-            f"limit must be a positive integer, got {limit!r} ({type(limit).__name__})."
+            f"limit must be a positive integer, got {limit!r} ({type(limit).__name__}). "
+            "Try limit=5 for a short list, limit=10 for the default, or limit=20 "
+            "for broader exploration (max 100)."
         )
     if limit < 1:
-        raise ValueError(f"limit must be >= 1, got {limit}.")
+        raise ValueError(
+            f"limit must be >= 1, got {limit}. "
+            "Try limit=5 for a short list or limit=10 for the default (max 100)."
+        )
     return tables.search_tables(query, limit=limit)
 
 
@@ -310,7 +355,11 @@ async def describe_table(
             body = await client.fetch_table_csv(csv_filename)
         except RBAAPIError as e:
             raise ValueError(
-                f"Could not fetch RBA table {table_id} ({csv_filename}). ({e})"
+                f"Could not fetch RBA table {table_id} ({csv_filename}) from "
+                f"www.rba.gov.au. ({e}) "
+                "Try again in a moment — the RBA CDN occasionally rate-limits. "
+                f"Confirm the table is published at {rba_url} or try "
+                "list_curated() for a known-good table ID."
             ) from e
         _, df = parse_csv(body)
 
@@ -346,7 +395,11 @@ async def describe_table(
             body = await client.fetch_table_csv(csv_filename)
         except RBAAPIError as e:
             raise ValueError(
-                f"Could not fetch RBA table {table_id} ({csv_filename}). ({e})"
+                f"Could not fetch RBA table {table_id} ({csv_filename}) from "
+                f"www.rba.gov.au. ({e}) "
+                "Try again in a moment — the RBA CDN occasionally rate-limits. "
+                f"Confirm the table is published at {rba_url} or try "
+                "list_curated() for a known-good curated table ID."
             ) from e
         header, df = parse_csv(body)
         series_list = []
@@ -419,9 +472,13 @@ async def _get_data_impl(
             f"Valid options: {sorted(_VALID_FORMATS)}"
         )
     if fmt_norm not in _VALID_FORMATS:
-        raise ValueError(
-            f"Unknown format {fmt!r}. Valid options: {sorted(_VALID_FORMATS)}"
+        msg = f"Unknown format {fmt!r}. Valid options: {sorted(_VALID_FORMATS)}."
+        close = difflib.get_close_matches(
+            fmt_norm, sorted(_VALID_FORMATS), n=1, cutoff=0.5
         )
+        if close:
+            msg += f" Did you mean {close[0]!r}?"
+        raise ValueError(msg)
     if start_date_validated and end_date_validated and start_date_validated > end_date_validated:
         raise ValueError(
             f"end_date ({end_date_validated}) is before start_date ({start_date_validated}). "
@@ -487,7 +544,11 @@ async def _get_data_impl(
         body = await client.fetch_table_csv(csv_filename, kind=cache_kind)
     except RBAAPIError as e:
         raise ValueError(
-            f"Could not fetch RBA table {table_id} ({csv_filename}). ({e})"
+            f"Could not fetch RBA table {table_id} ({csv_filename}) from "
+            f"www.rba.gov.au. ({e}) "
+            "Try again in a moment — the RBA CDN occasionally rate-limits. "
+            f"Confirm the table is published at {rba_url} or try "
+            "list_curated() for a known-good curated table ID."
         ) from e
 
     header, df = parse_csv(body)

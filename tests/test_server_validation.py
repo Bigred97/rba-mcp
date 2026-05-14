@@ -121,3 +121,39 @@ async def test_latest_registry_inconsistency_raises_value_error(monkeypatch):
     monkeypatch.setattr(tables_mod, "get_csv_filename", lambda _tid: None)
     with pytest.raises(ValueError, match="registry inconsistency"):
         await server.latest("F11", series="aud_usd")
+
+
+# ----- 0.1.11 error-message sweep: actionable-hint regressions -----
+#
+# Every ValueError must carry a "Try X" / "Did you mean X?" / "Valid options"
+# pointer that suggests the correction (quality dimension #5 in CLAUDE.md).
+# These tests lock in the actionable shape on a couple of representative
+# rejection paths.
+
+async def test_unknown_curated_series_suggests_did_you_mean():
+    """Typo'd curated series key should surface a difflib 'Did you mean?' hint
+    AND a describe_table() pointer — the CLAUDE.md textbook shape."""
+    with pytest.raises(ValueError) as exc_info:
+        # 'aud_us' is one char off from 'aud_usd' — difflib should match.
+        await server.get_data("F11", series="aud_us")
+    msg = str(exc_info.value)
+    assert "Did you mean 'aud_usd'" in msg, f"missing did-you-mean: {msg!r}"
+    assert "describe_table('F11')" in msg, f"missing describe_table pointer: {msg!r}"
+
+
+async def test_invalid_series_id_shape_carries_actionable_hint():
+    """Raw series IDs with invalid chars must hint at shape, a likely correction,
+    and which describe_table call to try — the CLAUDE.md example verbatim."""
+    # Force the non-curated path: a syntactically-invalid raw ID can't be a
+    # curated key, so translate_series falls through to the raw-ID branch.
+    # We bypass the curated wrapper by monkey-patching curated.get to None for
+    # F11 so the series flows into _validate_series_for_url directly.
+    from unittest.mock import patch
+    from rba_mcp import curated as curated_mod
+    with patch.object(curated_mod, "get", return_value=None):
+        with pytest.raises(ValueError) as exc_info:
+            # 'fx rusd' has a space — invalid char — and is close to 'FXRUSD'.
+            await server.get_data("F11", series="fx rusd")
+    msg = str(exc_info.value)
+    assert "invalid characters" in msg, f"missing shape hint: {msg!r}"
+    assert "describe_table" in msg, f"missing describe_table pointer: {msg!r}"

@@ -9,6 +9,7 @@ Series IDs (FXRUSD, FIRMMCRT, etc.) are the canonical machine keys from row
 """
 from __future__ import annotations
 
+import difflib
 from dataclasses import dataclass, field
 from importlib import resources
 from pathlib import Path
@@ -120,10 +121,13 @@ def translate_series(
     items: list[str]
     if isinstance(requested, list):
         if not requested:
+            valid_keys = sorted(curated.series.keys())
+            example = valid_keys[0] if valid_keys else "aud_usd"
             raise ValueError(
                 f"series filter is an empty list. "
-                f"Pass at least one series, or omit `series` to query all "
-                f"curated series for {curated.id}."
+                f"Pass at least one series (e.g. {example!r}), or omit "
+                f"`series` to query all curated series for {curated.id}. "
+                f"Try describe_table('{curated.id}') to see valid keys."
             )
         items = requested
     else:
@@ -136,18 +140,33 @@ def translate_series(
         v_str = str(v).strip()
         if not v_str:
             raise ValueError(
-                f"Empty series value. Try one of: {', '.join(valid_keys[:15])}"
-                + ("..." if len(valid_keys) > 15 else "")
+                f"Empty series value for table '{curated.id}'. "
+                f"Try one of: {', '.join(valid_keys[:10])}"
+                + ("..." if len(valid_keys) > 10 else "")
+                + f". Or call describe_table('{curated.id}') to see the full list."
             )
         if v_str in curated.series:
             out.append(curated.series[v_str].series_id)
         elif v_str in known_ids:
             out.append(v_str)               # raw ID escape hatch
         else:
+            # "Did you mean?" — match against curated keys first, then raw IDs.
+            close_keys = difflib.get_close_matches(
+                v_str.lower(), valid_keys, n=1, cutoff=0.6
+            )
+            close_ids = difflib.get_close_matches(
+                v_str.upper(), sorted(known_ids), n=1, cutoff=0.6
+            )
+            did_you_mean = ""
+            if close_keys:
+                did_you_mean = f" Did you mean '{close_keys[0]}'?"
+            elif close_ids:
+                did_you_mean = f" Did you mean '{close_ids[0]}'?"
             raise ValueError(
-                f"Unknown series '{v}' for table '{curated.id}'. "
-                f"Try one of: {', '.join(valid_keys[:15])}"
-                + ("..." if len(valid_keys) > 15 else "")
-                + ". Or pass a raw RBA series ID directly."
+                f"Unknown series '{v}' for table '{curated.id}'.{did_you_mean} "
+                f"Valid keys: {', '.join(valid_keys[:10])}"
+                + ("..." if len(valid_keys) > 10 else "")
+                + f". Try describe_table('{curated.id}') to see the full list, "
+                "or pass a raw RBA series ID directly."
             )
     return out
