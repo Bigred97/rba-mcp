@@ -1,0 +1,263 @@
+# rba-mcp — full reference
+
+> MCP server exposing Reserve Bank of Australia F-tables through 5 plain-English tools.
+
+rba-mcp wraps RBA's F-table CSV statistical tables. 5 curated F-tables cover the most-asked indicators. This document is a self-contained integration reference.
+
+---
+
+## Install
+
+```bash
+uvx --upgrade rba-mcp
+```
+
+### Claude Desktop
+
+```json
+{
+  "mcpServers": {
+    "rba": {
+      "command": "uvx",
+      "args": ["--upgrade", "rba-mcp"]
+    }
+  }
+}
+```
+
+### Cursor
+
+```json
+{
+  "mcpServers": {
+    "rba": {
+      "command": "uvx",
+      "args": ["--upgrade", "rba-mcp"]
+    }
+  }
+}
+```
+
+---
+
+## Trust contract
+
+Every `DataResponse` carries:
+
+```
+source             "Reserve Bank of Australia (RBA)"
+source_url         https://www.rba.gov.au/statistics/tables/
+rba_url            anchor link for the specific F-table
+attribution        full CC-BY 4.0 International attribution string with licence URL
+retrieved_at       UTC timestamp
+server_version     importlib.metadata.version("rba-mcp")
+stale              True when serving cached fallback after upstream error
+stale_reason       human-readable when stale=True
+truncated_at       int | None
+```
+
+Cache TTLs: 6h general data, 15min latest. Graceful degradation: when www.rba.gov.au is unreachable, serve the last cached payload with `stale=True`. F-table CSVs have a non-standard header (row 6 = Units, row 11 = Series ID, data starts row 12) — parsed by `parsing.py`.
+
+**CC-BY 4.0 International** (not 3.0 Australia) — matches ABS and Open-Meteo.
+
+---
+
+## Tools
+
+### search_tables(query, limit=10)
+
+Fuzzy-search RBA F-tables.
+
+```python
+await search_tables("cash rate")
+# → [{id: 'F1.1', name: 'Interest Rates and Yields - Money Market', ...}]
+
+await search_tables("aud usd", limit=5)
+# → top FX-related tables, F11 and F11.1 first
+```
+
+### describe_table(table_id)
+
+For curated tables: plain-English series keys + descriptions + units + start_date / end_date per series. For raw tables: fetches the CSV header and returns raw series IDs.
+
+```python
+await describe_table("F1.1")
+# detail.series = [
+#   {key: 'cash_rate_target', series_id: 'FIRMMCRT', unit: 'Per cent per annum',
+#    frequency: 'Daily', start_date: '1990-01-22', end_date: '2026-05-...'},
+#   ...
+# ]
+```
+
+### get_data(table_id, series=None, start_date=None, end_date=None, format="records")
+
+For curated tables: plain-English series keys (`aud_usd`, `cash_rate_target`) translate to canonical RBA series IDs server-side. Pass a list for multi-series query, or omit `series` to get every curated series in the table. For raw tables: pass raw RBA series IDs (e.g. `FXRUSD`).
+
+Date format: `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. Int year (`start_date=2024`) is accepted. `end_date` snaps to the LAST instant of its period — `end_date="2024"` includes all of 2024.
+
+```python
+# Cash rate target since 2020
+await get_data("F1.1", series="cash_rate_target", start_date="2020")
+
+# All FX rates against AUD, last year
+await get_data("F11.1",
+               start_date="2024-01-01", end_date="2024-12-31")
+
+# Mortgage rates as CSV
+await get_data("F6", format="csv", start_date="2023")
+
+# Raw (non-curated) F-table
+await get_data("F1", series=["FIRMMCRTD", "FIRMMBAB30"])
+```
+
+### latest(table_id, series=None)
+
+Wraps `get_data` with `last_n=1` and a 15-min cache. `series=None` returns the latest observation for every curated series in the table (useful dashboard pattern).
+
+```python
+await latest("F1.1", series="cash_rate_target")
+# → resp.records[0]: period='2026-05-06', value=3.85, unit='Per cent per annum'
+
+await latest("F11.1")
+# → resp.records: latest aud_usd, aud_eur, aud_jpy, aud_cny, etc. in one call
+```
+
+### list_curated()
+
+```python
+list_curated()
+# → ['F1.1', 'F11', 'F11.1', 'F4', 'F6']
+```
+
+---
+
+## Curated F-tables (5)
+
+### F1.1 — Interest Rates and Yields — Money Market
+
+Cash rate target, cash rate, bank bills, OIS rates, treasury notes.
+
+- frequency: Daily
+- key series:
+  - `cash_rate_target` → FIRMMCRT (Per cent per annum)
+  - `cash_rate` → FIRMMCRTD
+  - `bab_3m` (bank-accepted bill 3-month yield) → FIRMMBAB90
+  - `ois_3m` → ...
+  - `tnote_3m` → ...
+- source: https://www.rba.gov.au/statistics/tables/#f1
+
+### F4 — Retail Deposit and Investment Rates
+
+Transaction accounts, savings, term deposits, cash management trusts.
+
+- frequency: Monthly
+- key series:
+  - `term_deposit_12m` (12-month term deposit rate)
+  - `transaction_account`
+  - `savings_account`
+
+### F6 — Housing Lending Rates
+
+Owner-occupier vs investor, variable vs fixed, outstanding vs new loans.
+
+- frequency: Monthly
+- key series:
+  - `owner_occupier_variable_existing` (standard variable, outstanding)
+  - `owner_occupier_variable_new` (new commitments)
+  - `investor_variable_existing`
+  - `investor_variable_new`
+  - ... (fixed-rate variants)
+
+### F11 — Exchange Rates — Monthly History
+
+AUD vs major currencies, monthly back to 1983.
+
+- frequency: Monthly
+- coverage: 1983-01 → latest
+- key series:
+  - `aud_usd` → FXRUSD (US Dollar)
+  - `aud_eur` → FXREUR (Euro)
+  - `aud_gbp` → FXRUKPS (Pound Sterling)
+  - `aud_jpy` → FXRJY (Japanese Yen)
+  - `aud_cny` → FXRCR (Chinese Renminbi)
+  - `aud_nzd` → FXRNZD
+  - `twi` → FXRTWI (Trade-Weighted Index)
+
+### F11.1 — Exchange Rates — Daily
+
+Same series as F11, daily resolution, 2023+ only.
+
+- frequency: Daily
+- coverage: 2023-01 → latest
+
+---
+
+## Worked examples
+
+### Current cash rate
+
+```python
+await latest("F1.1", series="cash_rate_target")
+```
+
+```json
+{
+  "dataset_id": "F1.1",
+  "dataset_name": "Interest Rates and Yields - Money Market",
+  "query": {"series": "cash_rate_target"},
+  "period": {"start": "2026-05-06", "end": "2026-05-06"},
+  "unit": "Per cent per annum",
+  "row_count": 1,
+  "records": [
+    {
+      "period": "2026-05-06",
+      "value": 3.85,
+      "series": "cash_rate_target",
+      "series_id": "FIRMMCRT",
+      "unit": "Per cent per annum"
+    }
+  ],
+  "source": "Reserve Bank of Australia",
+  "source_url": "https://www.rba.gov.au/statistics/tables/",
+  "rba_url": "https://www.rba.gov.au/statistics/tables/#f1.1",
+  "attribution": "Source: Reserve Bank of Australia. Licensed under CC-BY 4.0 International (https://creativecommons.org/licenses/by/4.0/).",
+  "retrieved_at": "2026-05-15T01:14:22Z",
+  "server_version": "0.1.10",
+  "stale": false,
+  "stale_reason": null
+}
+```
+
+### Multi-currency dashboard
+
+```python
+await get_data("F11",
+               series=["aud_usd", "aud_eur", "aud_jpy", "twi"],
+               start_date="2020")
+```
+
+→ Monthly observations for 4 series since 2020.
+
+### Discovery flow for unknown topic
+
+```python
+results = await search_tables("yield curve")
+# → may surface F2 (Government bonds) — not curated; describe_table to see series
+detail = await describe_table(results[0].id)
+# Pass raw RBA series IDs to get_data for non-curated tables
+```
+
+---
+
+## Cross-source pairings
+
+- [abs-mcp](https://pypi.org/project/abs-mcp/) for CPI / unemployment / GDP context alongside cash rate decisions
+- [apra-mcp](https://pypi.org/project/apra-mcp/) for ADI capital ratios trend against monetary policy
+- [ato-mcp](https://pypi.org/project/ato-mcp/) for tax-by-postcode context alongside mortgage rates
+- For the canonical "what's the AU economy doing" set, pair `rba-mcp` (F1.1, F11.1) + `abs-mcp` (LF, CPI, ANA_AGG)
+
+---
+
+## License
+
+rba-mcp server code is MIT-licensed. RBA data carries CC-BY 4.0 International; the attribution is echoed on every response.
