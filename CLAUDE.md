@@ -35,6 +35,12 @@ Repo-specific extras:
 - Tool names diverge from sister pattern by design: `search_tables` / `describe_table` because the data shape is tables-not-datasets.
 - `end_date` snaps to the LAST instant of its period (so `end_date='2024'` includes all of 2024, not just Jan 1).
 - Trusted Publishing was set up in 0.1.6 — first sister to do so.
+- **`top_n` is intentionally absent.** F-table CSVs are flat series-by-time
+  matrices — each series ID is its own column, with no entity dimension to rank
+  across. Adding `top_n` would require synthesising a "top series" concept that
+  isn't natively meaningful on F-tables. Customers wanting comparative views
+  should use `describe_table()` to see available series and call `get_data()`
+  with the series IDs they care about.
 
 ---
 
