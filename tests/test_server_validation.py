@@ -157,3 +157,74 @@ async def test_invalid_series_id_shape_carries_actionable_hint():
     msg = str(exc_info.value)
     assert "invalid characters" in msg, f"missing shape hint: {msg!r}"
     assert "describe_table" in msg, f"missing describe_table pointer: {msg!r}"
+
+
+# ----- Wave 4: start_period / end_period portfolio alias --------------------
+#
+# rba-mcp historically used start_date / end_date. The portfolio standard
+# (7 of 9 sisters) is start_period / end_period. Both names are accepted; the
+# canonical name takes precedence when one is supplied. Supplying both with
+# non-None values is ambiguous and raises ValueError.
+
+
+async def test_start_period_alias_accepted():
+    """start_period='2024' must behave identically to start_date='2024'.
+
+    We pass an unknown series so the period validation passes but the call
+    surfaces the same downstream error — proving the alias was wired to the
+    same code path.
+    """
+    with pytest.raises(ValueError, match="Unknown series"):
+        await server.get_data("F11", series="aud_atlantis", start_period="2024")
+
+
+async def test_end_period_alias_accepted():
+    """end_period mirrors end_date — same downstream rejection."""
+    with pytest.raises(ValueError, match="Unknown series"):
+        await server.get_data(
+            "F11", series="aud_atlantis", end_period="2025"
+        )
+
+
+async def test_start_period_and_start_date_both_supplied_raises():
+    """Mutually exclusive: pick one, not both."""
+    with pytest.raises(ValueError, match="Use either start_period or start_date"):
+        await server.get_data(
+            "F11", series="aud_usd", start_period="2024", start_date="2023"
+        )
+
+
+async def test_end_period_and_end_date_both_supplied_raises():
+    """Mutually exclusive: pick one, not both."""
+    with pytest.raises(ValueError, match="Use either end_period or end_date"):
+        await server.get_data(
+            "F11", series="aud_usd", end_period="2024", end_date="2025"
+        )
+
+
+async def test_start_date_still_works_regression():
+    """Legacy `start_date` must keep working — non-breaking alias contract.
+
+    Same downstream rejection as the alias test above proves the legacy path
+    still routes through `_get_data_impl`.
+    """
+    with pytest.raises(ValueError, match="Unknown series"):
+        await server.get_data("F11", series="aud_atlantis", start_date="2024")
+
+
+async def test_end_date_still_works_regression():
+    """Legacy `end_date` must keep working — non-breaking alias contract."""
+    with pytest.raises(ValueError, match="Unknown series"):
+        await server.get_data("F11", series="aud_atlantis", end_date="2025")
+
+
+async def test_start_period_end_period_swap_error_uses_legacy_field_name():
+    """end-before-start error keeps the existing message shape (legacy
+    'end_date' field name) — the error text is intentionally unchanged so
+    existing log scrapers / docs keep working. The alias is purely additive
+    at the parameter surface."""
+    with pytest.raises(ValueError, match="end_date .* is before start_date"):
+        await server.get_data(
+            "F11", series="aud_usd",
+            start_period="2025", end_period="2020",
+        )

@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.3.0] - 2026-05-15
+
+### Added
+
+- **`start_period` / `end_period` parameters** on `get_data` — additive,
+  non-breaking aliases for the legacy `start_date` / `end_date`. Wave 4 of
+  the portfolio interoperability pass: 7 of 9 sister MCPs already use
+  `start_period` / `end_period` (abs, aemo, aihw, apra, asic, ato, wgea);
+  rba-mcp now accepts the same name so cross-sister calling patterns
+  match. Same format and semantics — `'YYYY'`, `'YYYY-MM'`, `'YYYY-MM-DD'`,
+  or an int year. Supplying both `start_period` and `start_date` (or
+  `end_period` and `end_date`) raises `ValueError` with a "Use either X or
+  Y, not both" hint. The legacy names continue to work unchanged.
+
+  ```python
+  # New canonical names (preferred)
+  await get_data("F11", series="aud_usd", start_period="2024")
+
+  # Legacy alias (still works)
+  await get_data("F11", series="aud_usd", start_date="2024")
+  ```
+
+- **+6 regression tests** in `test_server_validation.py` locking in the
+  alias contract: canonical accepted, legacy still accepted, both-at-once
+  raises, swap-error message unchanged.
+
+- 127 unit tests now (was 120). 10× zero-flake green.
+- No new dependencies. No exception-type changes. No envelope changes.
+
 ## [0.2.0] - 2026-05-15
 
 ### Added

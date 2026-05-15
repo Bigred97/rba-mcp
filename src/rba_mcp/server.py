@@ -443,6 +443,30 @@ async def describe_table(
     )
 
 
+def _resolve_period_alias(
+    canonical: Any,
+    legacy: Any,
+    canonical_name: str,
+    legacy_name: str,
+) -> Any:
+    """Resolve the new canonical period parameter against the legacy alias.
+
+    Portfolio interoperability (Wave 4): rba-mcp historically used
+    `start_date` / `end_date`; the portfolio standard (7 of 9 sisters) is
+    `start_period` / `end_period`. Both names are accepted for backward
+    compatibility — but supplying both with non-None values is ambiguous
+    and rejected with a "Use either X or Y, not both" hint.
+    """
+    if canonical is not None and legacy is not None:
+        raise ValueError(
+            f"Use either {canonical_name} or {legacy_name}, not both. "
+            f"Got {canonical_name}={canonical!r} and {legacy_name}={legacy!r}. "
+            f"{canonical_name} is the portfolio-standard name; {legacy_name} "
+            "is retained as a legacy alias."
+        )
+    return canonical if canonical is not None else legacy
+
+
 async def _get_data_impl(
     table_id: str,
     series: Any,
@@ -456,6 +480,9 @@ async def _get_data_impl(
     reset_stale_signal()
     table_id = _normalize_table_id(table_id)
     series_validated = _validate_series(series)
+    # `_validate_period` keeps the legacy `start_date` / `end_date` field
+    # names in its error messages — the caller has already resolved aliasing
+    # in `get_data` / `latest` so we don't double-warn here.
     start_date_validated = _validate_period(start_date, "start_date")
     end_date_validated = _validate_period(end_date, "end_date")
     # Bug-fix (0.1.6): type-check `fmt` BEFORE coercing. Previously
@@ -620,13 +647,38 @@ async def get_data(
             ],
         ),
     ] = None,
+    start_period: Annotated[
+        str | int | None,
+        Field(
+            description=(
+                "Inclusive start period (portfolio-standard name). Accepts "
+                "'YYYY', 'YYYY-MM', or 'YYYY-MM-DD'. An int year (e.g. 2024) "
+                "is also accepted and treated as 'YYYY'. Semantic-checked: "
+                "'2024-13' or '----' rejected at the boundary. Mutually "
+                "exclusive with the legacy `start_date` alias."
+            ),
+            examples=["2024", "2024-03", "2024-03-15", 2024],
+        ),
+    ] = None,
+    end_period: Annotated[
+        str | int | None,
+        Field(
+            description=(
+                "Inclusive end period (portfolio-standard name). Same format "
+                "as start_period. Mutually exclusive with the legacy "
+                "`end_date` alias."
+            ),
+            examples=["2025", "2025-12", "2025-12-31", 2025],
+        ),
+    ] = None,
     start_date: Annotated[
         str | int | None,
         Field(
             description=(
-                "Inclusive start date. Accepts 'YYYY', 'YYYY-MM', or 'YYYY-MM-DD'. "
-                "An int year (e.g. 2024) is also accepted and treated as 'YYYY'. "
-                "Semantic-checked: '2024-13' or '----' rejected at the boundary."
+                "Legacy alias for `start_period` — retained for backward "
+                "compatibility (rba-mcp <= 0.2.x). Prefer `start_period` for "
+                "cross-sister consistency. Same format and semantics as "
+                "`start_period`. Supplying both raises ValueError."
             ),
             examples=["2024", "2024-03", "2024-03-15", 2024],
         ),
@@ -634,7 +686,11 @@ async def get_data(
     end_date: Annotated[
         str | int | None,
         Field(
-            description="Inclusive end date. Same format as start_date.",
+            description=(
+                "Legacy alias for `end_period` — retained for backward "
+                "compatibility. Prefer `end_period` for cross-sister "
+                "consistency. Supplying both raises ValueError."
+            ),
             examples=["2025", "2025-12", "2025-12-31", 2025],
         ),
     ] = None,
@@ -658,20 +714,30 @@ async def get_data(
     series in the table.
 
     Examples:
-        # Cash rate target since 2020
-        resp = await get_data("F1.1", series="cash_rate_target", start_date="2020")
+        # Cash rate target since 2020 (portfolio-standard name)
+        resp = await get_data("F1.1", series="cash_rate_target", start_period="2020")
         # → resp.records[0]: period='2020-01-01', value=0.25, series='cash_rate_target'
 
         # All FX rates against AUD, last year
-        resp = await get_data("F11.1", start_date="2024-01-01", end_date="2024-12-31")
+        resp = await get_data("F11.1", start_period="2024-01-01", end_period="2024-12-31")
         # → resp.records covers aud_usd, aud_eur, aud_jpy, aud_cny, ... daily
 
         # Mortgage rates as CSV
-        resp = await get_data("F6", format="csv", start_date="2023")
+        resp = await get_data("F6", format="csv", start_period="2023")
         # → resp.csv = "date,series,value\n2023-01-01,housing_standard_variable,..."
 
         # Raw (non-curated) F-table — pass raw RBA series IDs
         resp = await get_data("F1", series=["FIRMMCRTD", "FIRMMBAB30"])
+
+        # Legacy alias still works (start_date / end_date)
+        resp = await get_data("F11", series="aud_usd", start_date="2024")
+
+    Parameter notes:
+        - Prefer `start_period` / `end_period` (portfolio-standard names; 7
+          of 9 sister MCPs use them).
+        - `start_date` / `end_date` are retained as legacy aliases.
+          Supplying both `start_period` and `start_date` (or `end_period`
+          and `end_date`) raises ValueError — pick one per pair.
 
     When to use:
         - You want a time series of an RBA indicator (use latest() for current-only)
@@ -682,7 +748,13 @@ async def get_data(
         DataResponse with records, unit, period bounds, RBA source URL,
         and CC-BY 4.0 attribution.
     """
-    return await _get_data_impl(table_id, series, start_date, end_date, format)
+    resolved_start = _resolve_period_alias(
+        start_period, start_date, "start_period", "start_date"
+    )
+    resolved_end = _resolve_period_alias(
+        end_period, end_date, "end_period", "end_date"
+    )
+    return await _get_data_impl(table_id, series, resolved_start, resolved_end, format)
 
 
 @mcp.tool

@@ -93,7 +93,7 @@ Add to `~/.cursor/mcp.json` (or workspace `.cursor/mcp.json`):
 |---|---|
 | `search_tables(query, limit=10)` | Fuzzy-search RBA F-tables by name or topic. |
 | `describe_table(table_id)` | Plain-English series listing for one F-table. |
-| `get_data(table_id, series, start_date, end_date, format)` | Query data. `series=None` returns all curated series; format = records / series / csv. |
+| `get_data(table_id, series, start_period, end_period, format)` | Query data. `series=None` returns all curated series; format = records / series / csv. `start_date` / `end_date` retained as legacy aliases. |
 | `latest(table_id, series)` | Most-recent observation for the requested series. |
 | `list_curated()` | The 5 F-table IDs with hand-curated plain-English support. |
 
@@ -120,7 +120,7 @@ latest(table_id="F1.1", series="cash_rate_target")
 **"AUD to USD over the last year"**
 
 ```
-get_data(table_id="F11.1", series="aud_usd", start_date="2024")
+get_data(table_id="F11.1", series="aud_usd", start_period="2024")
 ```
 
 **"Compare AUD against USD, EUR and GBP since 2020"**
@@ -129,13 +129,14 @@ get_data(table_id="F11.1", series="aud_usd", start_date="2024")
 get_data(
   table_id="F11",
   series=["aud_usd", "aud_eur", "aud_gbp"],
-  start_date="2020"
+  start_period="2020"
 )
 ```
 
 ## Period formats
 
-RBA series use ISO-style date formats. Pass `start_date` / `end_date` as:
+RBA series use ISO-style date formats. Pass `start_period` / `end_period` (or
+the legacy `start_date` / `end_date` aliases) as:
 
 | Format | Example | Use for |
 |---|---|---|
@@ -143,7 +144,7 @@ RBA series use ISO-style date formats. Pass `start_date` / `end_date` as:
 | `YYYY-MM` | `"2024-03"` | Calendar month (`end_date="2024-12"` includes all of December — fixed in 0.1.4) |
 | `YYYY-MM-DD` | `"2024-03-15"` | Specific day (daily tables only) |
 
-`start_date` snaps to the first instant of its period; `end_date` snaps to the last. So `start="2024", end="2024"` returns "all of 2024", not just 1 January.
+`start_period` snaps to the first instant of its period; `end_period` snaps to the last. So `start_period="2024", end_period="2024"` returns "all of 2024", not just 1 January. The legacy `start_date` / `end_date` parameter names continue to work as aliases (rba-mcp <= 0.2.x); prefer the new names for cross-sister consistency with the rest of the portfolio.
 
 ## Verifying your install
 
