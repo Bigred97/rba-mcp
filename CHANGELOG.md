@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.1] - 2026-05-16
+
+### Fixed
+
+- `test_describe_non_curated_returns_raw_metadata` updated to use F3 (corporate
+  bond yields, still non-curated) instead of F2 which is now curated.
+- `test_list_curated_returns_five` / `test_call_list_curated_returns_five` in
+  live and MCP-protocol test suites updated to expect all 10 curated tables.
+- CLAUDE.md curated dataset list updated to reflect 10 tables.
+
 ## [0.4.0] - 2026-05-16
 
 ### Added

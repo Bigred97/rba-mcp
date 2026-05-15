@@ -30,11 +30,13 @@ async def test_each_tool_has_input_schema():
             assert t.description, f"{t.name} has no description"
 
 
-async def test_call_list_curated_returns_five():
+async def test_call_list_curated_returns_ten():
     async with Client(server.mcp) as c:
         result = await c.call_tool("list_curated", {})
     assert isinstance(result.data, list)
-    assert set(result.data) == {"F1.1", "F4", "F6", "F11", "F11.1"}
+    assert set(result.data) == {
+        "F1.1", "F2", "F2.1", "F4", "F5", "F6", "F7", "F8", "F11", "F11.1",
+    }
 
 
 async def test_call_search_finds_cash_rate():

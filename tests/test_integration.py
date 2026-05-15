@@ -61,16 +61,18 @@ async def test_describe_curated_returns_plain_english():
 
 
 async def test_describe_non_curated_returns_raw_metadata():
-    """F2 is not curated; describe should fetch + parse the CSV and return raw IDs."""
-    detail = await server.describe_table("F2")
+    """F3 is not curated; describe should fetch + parse the CSV and return raw IDs."""
+    detail = await server.describe_table("F3")
     assert detail.is_curated is False
     assert len(detail.series) >= 1
     # Series IDs are raw RBA codes, not plain English
     assert all(s.key == s.series_id for s in detail.series)
 
 
-async def test_list_curated_returns_five_via_server():
-    assert set(server.list_curated()) == {"F1.1", "F4", "F6", "F11", "F11.1"}
+async def test_list_curated_returns_ten_via_server():
+    assert set(server.list_curated()) == {
+        "F1.1", "F2", "F2.1", "F4", "F5", "F6", "F7", "F8", "F11", "F11.1",
+    }
 
 
 @pytest.mark.parametrize("table, series, low, high, unit", [

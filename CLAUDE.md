@@ -17,9 +17,9 @@ plus the cross-sister discipline.
 | PyPI package | `rba-mcp` |
 | GitHub | https://github.com/Bigred97/rba-mcp |
 
-## Curated datasets (5)
+## Curated datasets (10)
 
-F1.1 (money market) · F4 (deposit/inv rates) · F6 (housing lending) · F11 (FX monthly) · F11.1 (FX daily)
+F1.1 (money market) · F2 (govt bond yields daily) · F2.1 (govt bond yields monthly) · F4 (deposit/inv rates) · F5 (indicator lending rates) · F6 (housing lending) · F7 (business lending rates) · F8 (personal lending rates) · F11 (FX monthly) · F11.1 (FX daily)
 
 ## Repo-specific module set
 
