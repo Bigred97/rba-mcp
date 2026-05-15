@@ -20,9 +20,9 @@ def test_list_tables_returns_19():
 def test_curated_tables_marked_curated():
     summaries = tables.list_tables()
     by_id = {s.id: s for s in summaries}
-    for cid in ("F1.1", "F4", "F6", "F11", "F11.1"):
+    for cid in ("F1.1", "F2", "F2.1", "F4", "F5", "F6", "F7", "F8", "F11", "F11.1"):
         assert by_id[cid].is_curated, f"{cid} should be marked curated"
-    assert not by_id["F2"].is_curated  # not in our MVP curated set
+    assert not by_id["F3"].is_curated  # F3 (corporate bonds) is not curated
 
 
 def test_get_csv_filename_for_dot_id():

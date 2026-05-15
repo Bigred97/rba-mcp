@@ -1,0 +1,80 @@
+id: F5
+name: Indicator Lending Rates
+description: |
+  Monthly indicator (advertised) lending rates across housing, small business,
+  personal loans, and credit cards. These are the published standard and
+  discounted rates set by banks — the reference rates for the market — as
+  distinct from actual charged rates (see F6 for actual housing rates and F7/F8
+  for actual business/personal rates).
+
+  Covers: owner-occupier and investor housing variable/fixed rates, small
+  business variable/fixed, large business weighted average, personal credit
+  cards, and personal term loans.
+  Source: Reserve Bank of Australia, Statistical Table F5.
+update_frequency: monthly
+csv_filename: f5-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - indicator lending rate
+  - advertised rate
+  - standard variable rate
+  - housing indicator rate
+  - small business rate
+  - credit card rate
+  - personal loan rate
+  - fixed rate home loan
+  - indicator mortgage rate
+  - published lending rate
+series:
+  housing_variable_standard:
+    series_id: FILRHLBVS
+    description: Housing loans — banks variable rate standard (owner-occupier)
+    unit: Per cent per annum
+  housing_variable_discounted:
+    series_id: FILRHLBVD
+    description: Housing loans — banks variable rate discounted (owner-occupier)
+    unit: Per cent per annum
+  housing_variable_owner_occupier:
+    series_id: FILRHLBVO
+    description: Housing loans — banks variable rate, owner-occupier (combined)
+    unit: Per cent per annum
+  housing_3yr_fixed:
+    series_id: FILRHL3YF
+    description: Housing loans — 3-year fixed rate (owner-occupier)
+    unit: Per cent per annum
+  housing_variable_standard_investor:
+    series_id: FILRHLBVSI
+    description: Housing loans — banks variable standard, investor
+    unit: Per cent per annum
+  housing_variable_discounted_investor:
+    series_id: FILRHLBVDI
+    description: Housing loans — banks variable discounted, investor
+    unit: Per cent per annum
+  housing_3yr_fixed_investor:
+    series_id: FILRHL3YFI
+    description: Housing loans — 3-year fixed rate, investor
+    unit: Per cent per annum
+  small_business_variable_term:
+    series_id: FILRSBVRT
+    description: Small business — variable rate term loan
+    unit: Per cent per annum
+  small_business_variable_overdraft:
+    series_id: FILRSBVOO
+    description: Small business — variable rate overdraft
+    unit: Per cent per annum
+  small_business_3yr_fixed:
+    series_id: FILRSB3YF
+    description: Small business — 3-year fixed rate
+    unit: Per cent per annum
+  large_business_variable:
+    series_id: FILRLBWAV
+    description: Large business — weighted average variable rate
+    unit: Per cent per annum
+  credit_card_standard:
+    series_id: FILRPLRCCS
+    description: Personal loans — credit card standard rate
+    unit: Per cent per annum
+  personal_loan_fixed:
+    series_id: FILRPLTUF
+    description: Personal loans — term unsecured fixed rate
+    unit: Per cent per annum

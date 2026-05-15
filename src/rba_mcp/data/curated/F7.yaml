@@ -1,0 +1,85 @@
+id: F7
+name: Business Lending Rates
+description: |
+  Monthly weighted average rates on outstanding and new business loans,
+  broken down by business size (small, medium, large) and loan type
+  (fixed/variable). These are actual rates charged across all loan facilities
+  of each type — as distinct from the advertised indicator rates in F5.
+
+  Small business = <$2m; medium business = $2m–$500m; large business = >$500m.
+  Source: Reserve Bank of Australia, Statistical Table F7.
+update_frequency: monthly
+csv_filename: f7-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - business lending rate
+  - business loan rate
+  - sme lending
+  - commercial lending
+  - small business interest rate
+  - medium business loan
+  - large business loan
+  - outstanding business rate
+  - new business loan rate
+  - actual business rate
+series:
+  outstanding_small_business_total:
+    series_id: FLRBFOSBT
+    description: Outstanding small business loans — total (weighted average)
+    unit: Per cent per annum
+  outstanding_small_business_fixed:
+    series_id: FLRBFOSBF
+    description: Outstanding small business loans — fixed rate
+    unit: Per cent per annum
+  outstanding_small_business_variable:
+    series_id: FLRBFOSBV
+    description: Outstanding small business loans — variable rate
+    unit: Per cent per annum
+  outstanding_medium_business_total:
+    series_id: FLRBFOMBT
+    description: Outstanding medium business loans — total (weighted average)
+    unit: Per cent per annum
+  outstanding_medium_business_fixed:
+    series_id: FLRBFOMBF
+    description: Outstanding medium business loans — fixed rate
+    unit: Per cent per annum
+  outstanding_medium_business_variable:
+    series_id: FLRBFOMBV
+    description: Outstanding medium business loans — variable rate
+    unit: Per cent per annum
+  outstanding_large_business_total:
+    series_id: FLRBFOLBT
+    description: Outstanding large business loans — total (weighted average)
+    unit: Per cent per annum
+  outstanding_large_business_fixed:
+    series_id: FLRBFOLBF
+    description: Outstanding large business loans — fixed rate
+    unit: Per cent per annum
+  outstanding_large_business_variable:
+    series_id: FLRBFOLBV
+    description: Outstanding large business loans — variable rate
+    unit: Per cent per annum
+  new_small_business_total:
+    series_id: FLRBFNSBT
+    description: New small business loans — total (weighted average)
+    unit: Per cent per annum
+  new_small_business_fixed:
+    series_id: FLRBFNSBF
+    description: New small business loans — fixed rate
+    unit: Per cent per annum
+  new_small_business_variable:
+    series_id: FLRBFNSBV
+    description: New small business loans — variable rate
+    unit: Per cent per annum
+  new_large_business_total:
+    series_id: FLRBFNLBT
+    description: New large business loans — total (weighted average)
+    unit: Per cent per annum
+  new_large_business_fixed:
+    series_id: FLRBFNLBF
+    description: New large business loans — fixed rate
+    unit: Per cent per annum
+  new_large_business_variable:
+    series_id: FLRBFNLBV
+    description: New large business loans — variable rate
+    unit: Per cent per annum

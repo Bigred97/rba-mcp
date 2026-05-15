@@ -82,7 +82,7 @@ async def test_get_data_unknown_curated_series():
 async def test_get_data_non_curated_requires_series():
     """A non-curated table requires explicit series — no defaulting."""
     with pytest.raises(ValueError, match="must specify which series"):
-        await server.get_data("F2")  # F2 is not curated
+        await server.get_data("F3")  # F3 (corporate bond yields) is not curated
 
 
 async def test_get_data_lowercase_table_normalized():
@@ -92,8 +92,11 @@ async def test_get_data_lowercase_table_normalized():
         await server.get_data("f11", series="aud_atlantis")  # raises on unknown series, not table
 
 
-async def test_list_curated_returns_five():
-    assert set(server.list_curated()) == {"F1.1", "F4", "F6", "F11", "F11.1"}
+async def test_list_curated_returns_ten():
+    assert set(server.list_curated()) == {
+        "F1.1", "F2", "F2.1", "F4", "F5",
+        "F6", "F7", "F8", "F11", "F11.1",
+    }
 
 
 async def test_describe_table_registry_inconsistency_raises_value_error(monkeypatch):

@@ -1,0 +1,41 @@
+id: F2.1
+name: Capital Market Yields – Government Bonds – Monthly
+description: |
+  Monthly averages of yields on Australian Government Securities (AGS) — nominal
+  and indexed bonds. Longer history than the daily F2 series, suitable for
+  longer-run trend analysis, historical comparisons, and term-premium modelling.
+  Source: Reserve Bank of Australia, Statistical Table F2.1.
+update_frequency: monthly
+csv_filename: f2.1-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - government bond yield monthly
+  - bond yield history
+  - ags monthly
+  - yield curve history
+  - 10 year bond monthly
+  - term premium
+  - historical bond yields
+  - government securities monthly
+  - long run bond yield
+series:
+  bond_2yr:
+    series_id: FCMYGBAG2
+    description: 2-year Australian Government Securities yield (monthly average)
+    unit: Per cent per annum
+  bond_3yr:
+    series_id: FCMYGBAG3
+    description: 3-year Australian Government Securities yield (monthly average)
+    unit: Per cent per annum
+  bond_5yr:
+    series_id: FCMYGBAG5
+    description: 5-year Australian Government Securities yield (monthly average)
+    unit: Per cent per annum
+  bond_10yr:
+    series_id: FCMYGBAG10
+    description: 10-year Australian Government Securities yield (monthly average)
+    unit: Per cent per annum
+  indexed_bond:
+    series_id: FCMYGBAGI
+    description: Indexed (inflation-linked) bond yield (monthly average)
+    unit: Per cent per annum

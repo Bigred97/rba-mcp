@@ -10,8 +10,11 @@ def reset():
     curated.reset_registry()
 
 
-def test_list_ids_returns_five():
-    assert set(curated.list_ids()) == {"F1.1", "F4", "F6", "F11", "F11.1"}
+def test_list_ids_returns_ten():
+    assert set(curated.list_ids()) == {
+        "F1.1", "F2", "F2.1", "F4", "F5",
+        "F6", "F7", "F8", "F11", "F11.1",
+    }
 
 
 def test_get_f11_loads_series():

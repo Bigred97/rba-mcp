@@ -1,0 +1,81 @@
+id: F8
+name: Personal Lending Rates
+description: |
+  Monthly weighted average rates on outstanding and new personal loans,
+  including credit cards, margin loans, flexible term loans, and other
+  personal facilities. These are actual rates charged — not advertised rates.
+
+  Covers: credit cards incurring interest, fixed personal loans, margin loans,
+  flexible term (variable and fixed), and other term loans.
+  Source: Reserve Bank of Australia, Statistical Table F8.
+update_frequency: monthly
+csv_filename: f8-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - personal loan rate
+  - credit card interest rate
+  - margin loan rate
+  - personal lending
+  - consumer lending rate
+  - household loan rate
+  - revolving credit
+  - flexible term loan
+  - actual personal rate
+  - credit card rate
+series:
+  outstanding_credit_card:
+    series_id: FLRPFOCIT
+    description: Outstanding personal loans — credit cards incurring interest (total)
+    unit: Per cent per annum
+  outstanding_personal_fixed:
+    series_id: FLRPFOFLT
+    description: Outstanding personal loans — fixed rate
+    unit: Per cent per annum
+  outstanding_margin_loans:
+    series_id: FLRPFOMLT
+    description: Outstanding personal loans — margin loans
+    unit: Per cent per annum
+  outstanding_flexible_total:
+    series_id: FLRPFOFTT
+    description: Outstanding flexible term personal loans — total
+    unit: Per cent per annum
+  outstanding_flexible_fixed:
+    series_id: FLRPFOFTF
+    description: Outstanding flexible term loans — fixed rate
+    unit: Per cent per annum
+  outstanding_flexible_variable:
+    series_id: FLRPFOFTV
+    description: Outstanding flexible term loans — variable rate
+    unit: Per cent per annum
+  outstanding_other_total:
+    series_id: FLRPFOORT
+    description: Outstanding other personal term loans — total
+    unit: Per cent per annum
+  outstanding_other_fixed:
+    series_id: FLRPFOORF
+    description: Outstanding other personal term loans — fixed rate
+    unit: Per cent per annum
+  outstanding_other_variable:
+    series_id: FLRPFOORV
+    description: Outstanding other personal term loans — variable rate
+    unit: Per cent per annum
+  new_personal_fixed:
+    series_id: FLRPFNFLT
+    description: New personal loans — fixed rate
+    unit: Per cent per annum
+  new_margin_loans:
+    series_id: FLRPFNMLT
+    description: New personal loans — margin loans
+    unit: Per cent per annum
+  new_flexible_total:
+    series_id: FLRPFNFTT
+    description: New flexible term personal loans — total
+    unit: Per cent per annum
+  new_flexible_fixed:
+    series_id: FLRPFNFTF
+    description: New flexible term loans — fixed rate
+    unit: Per cent per annum
+  new_flexible_variable:
+    series_id: FLRPFNFTV
+    description: New flexible term loans — variable rate
+    unit: Per cent per annum

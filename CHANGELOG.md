@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0] - 2026-05-16
+
+### Added
+
+- **5 new curated F-tables**: F2 (government bond yields daily), F2.1 (government
+  bond yields monthly), F5 (indicator lending rates), F7 (business lending rates),
+  F8 (personal lending rates). Doubles curated coverage from 5 to 10 tables.
+- F2/F2.1 expose 2yr, 3yr, 5yr, 10yr AGS yields and indexed bonds — the
+  benchmark risk-free yield curve.
+- F5 covers advertised housing (owner-occ + investor, variable + 3yr fixed),
+  small/large business, and credit card indicator rates.
+- F7 covers actual outstanding and new business loan rates by size (small /
+  medium / large) and type (fixed / variable).
+- F8 covers actual outstanding and new personal loan rates including credit
+  cards, margin loans, and flexible term loans.
+
 ## [0.3.0] - 2026-05-15
 
 ### Added

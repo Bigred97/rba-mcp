@@ -1,0 +1,53 @@
+id: F2
+name: Capital Market Yields – Government Bonds – Daily
+description: |
+  Daily yields on Australian Government Securities (AGS) — nominal bonds and
+  indexed bonds — published by the Reserve Bank of Australia. Covers 2-year,
+  3-year, 5-year, and 10-year maturities. These are the benchmark risk-free
+  reference rates used in asset pricing, duration analysis, monetary policy
+  assessment, and term-premium estimation.
+
+  Yields are secondary-market mid-rates compiled from dealer quotes.
+  Source: Reserve Bank of Australia, Statistical Table F2.
+update_frequency: daily
+csv_filename: f2-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - government bond yield
+  - bond yield
+  - ags yield
+  - treasury yield
+  - risk free rate
+  - 10 year bond
+  - 10 year yield
+  - 2 year bond
+  - 3 year bond
+  - 5 year bond
+  - yield curve
+  - term structure
+  - government securities
+  - australian government securities
+  - ags
+  - inflation indexed bond
+  - sovereign yield
+series:
+  bond_2yr:
+    series_id: FCMYGBAG2D
+    description: 2-year Australian Government Securities yield
+    unit: Per cent per annum
+  bond_3yr:
+    series_id: FCMYGBAG3D
+    description: 3-year Australian Government Securities yield
+    unit: Per cent per annum
+  bond_5yr:
+    series_id: FCMYGBAG5D
+    description: 5-year Australian Government Securities yield
+    unit: Per cent per annum
+  bond_10yr:
+    series_id: FCMYGBAG10D
+    description: 10-year Australian Government Securities yield
+    unit: Per cent per annum
+  indexed_bond:
+    series_id: FCMYGBAGID
+    description: Indexed (inflation-linked) bond yield
+    unit: Per cent per annum
