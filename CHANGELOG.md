@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.7.4] - 2026-05-16
+
+### Added — `test_resilience.py` perf-budget regressions
+
+- New offline-only test module (`tests/test_resilience.py`) that locks in
+  the hot-path characteristics of `latest()` / `get_data()` so a future
+  parsing or shaping change can't silently regress the latency budget.
+- Tests added:
+  - `test_latest_warm_cache_under_2s` — `latest()` warm-cache call <2s
+  - `test_latest_no_per_call_memory_balloon` — peak RSS grows by <30MB
+    across 30 repeated `latest()` calls (catches DataFrame/record leaks)
+  - `test_latest_explicit_series_does_not_pull_all_columns` — single-
+    series queries return single-series records (no cross-leak)
+  - `test_get_data_date_range_does_not_carry_out_of_range_rows` — date
+    filter is applied before shaping, no leakage outside the window
+  - `test_concurrent_latest_calls_complete` — 10 parallel warm-cache
+    calls complete in <5s (in-flight coalescing intact)
+
+### Notes — Item 1 from the sister-MCP playbook
+
+- The playbook's hypothetical "5-10MB F-tables" doesn't match current
+  RBA reality — measured live (2026-05-16), the largest curated tables
+  are F11.1 (122KB), C1 (138KB), D2 (87KB), all comfortably below the
+  threshold where filter-pushdown into the parse step would change
+  user-observable latency. The existing pipeline already drops unused
+  columns / out-of-range rows before record shaping, so the dominant
+  cost is pandas' parse, not the filtering. Item 1 therefore lands as
+  regression coverage rather than a parser rewrite — locking in the
+  perf budget so a future change has to clear the bar.
+
+### Tests
+
+- 161 unit tests passing (was 156). 10× zero-flake gauntlet.
+
 ## [0.7.3] - 2026-05-16
 
 ### Fixed — `ValueError` hints are now transport-agnostic
