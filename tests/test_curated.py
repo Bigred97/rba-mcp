@@ -10,11 +10,11 @@ def reset():
     curated.reset_registry()
 
 
-def test_list_ids_returns_twelve():
+def test_list_ids_returns_fourteen():
     assert set(curated.list_ids()) == {
         "F1.1", "F2", "F2.1", "F4", "F5",
         "F6", "F7", "F8", "F11", "F11.1",
-        "D1", "D2",
+        "D1", "D2", "C1", "G3",
     }
 
 
@@ -47,6 +47,25 @@ def test_get_d2_loads_level_series():
     assert "total_credit_excl_financial_sa" in d2.series
     assert d2.series["total_credit_excl_financial_sa"].series_id == "DLCACFS"
     assert d2.series["business_credit_sa"].unit == "$ billion"
+
+
+def test_get_c1_loads_card_series():
+    c1 = curated.get("C1")
+    assert c1 is not None
+    assert c1.csv_filename == "c1-data.csv"
+    assert "value_of_purchases" in c1.series
+    assert c1.series["value_of_purchases"].series_id == "CCCCSTPVSA"
+    assert c1.series["total_balances"].series_id == "CCCCSBTSA"
+    assert c1.series["value_of_purchases"].unit == "$ million"
+
+
+def test_get_g3_loads_inflation_expectations():
+    g3 = curated.get("G3")
+    assert g3 is not None
+    assert g3.csv_filename == "g3-data.csv"
+    assert "consumer_expectations_1yr" in g3.series
+    assert g3.series["consumer_expectations_1yr"].series_id == "GCONEXP"
+    assert g3.series["break_even_10yr"].series_id == "GBONYLD"
 
 
 def test_get_case_insensitive():

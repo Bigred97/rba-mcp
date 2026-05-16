@@ -1,0 +1,56 @@
+id: G3
+name: Inflation Expectations — Quarterly
+description: |
+  Quarterly forward-looking inflation expectations from multiple sources:
+  consumer surveys (Melbourne Institute), business surveys (NAB), union
+  officials, market economists, plus the break-even 10-year inflation
+  rate implied by indexed vs nominal AGS yields.
+
+  Source: RBA Statistical Table G3. Reading: a 4% consumer expectation
+  while CPI is 3.2% suggests inflation psychology is anchored above the
+  realised number. Useful for macro analysts, monetary-policy
+  commentators, bond traders pricing real rates, and economists
+  tracking RBA framework credibility.
+update_frequency: quarterly
+csv_filename: g3-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - inflation expectations
+  - inflation forecast
+  - consumer expectations
+  - market expectations
+  - break-even inflation
+  - inflation psychology
+  - real rates
+  - monetary policy expectations
+  - rba g3
+  - inflation anchor
+series:
+  consumer_expectations_1yr:
+    series_id: GCONEXP
+    description: Consumer inflation expectations 1-year ahead (Melbourne Institute survey)
+    unit: Per cent
+  business_expectations_3m:
+    series_id: GBUSEXP
+    description: Business inflation expectations 3-months ahead (NAB Business Survey)
+    unit: Per cent
+  union_expectations_1yr:
+    series_id: GUNIEXPY
+    description: Union officials' inflation expectations 1-year ahead
+    unit: Per cent
+  union_expectations_2yr:
+    series_id: GUNIEXPYY
+    description: Union officials' inflation expectations 2-year ahead
+    unit: Per cent
+  market_economists_1yr:
+    series_id: GMAREXPY
+    description: Market economists' inflation expectations 1-year ahead
+    unit: Per cent
+  market_economists_2yr:
+    series_id: GMAREXPYY
+    description: Market economists' inflation expectations 2-year ahead
+    unit: Per cent
+  break_even_10yr:
+    series_id: GBONYLD
+    description: Break-even 10-year inflation rate, implied from 10-year nominal AGS yield minus 10-year indexed AGS yield
+    unit: Per cent

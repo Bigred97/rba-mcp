@@ -1,0 +1,83 @@
+id: C1
+name: Credit and Charge Card Statistics — Monthly
+description: |
+  Monthly aggregate statistics for credit and charge cards issued in
+  Australia: number and value of cash advances, purchases (split
+  domestic / overseas / device-present), total transactions, repayments,
+  and balances (total + accruing interest). Series are seasonally adjusted
+  unless noted. Source: RBA Statistical Table C1.
+
+  Direct retail/fintech signal — credit-card spend volume tracks
+  consumer confidence in real time. Useful for retail analysts, fintech
+  product teams (BNPL competitor benchmarking), payments researchers,
+  and macro commentators citing household credit usage.
+update_frequency: monthly
+csv_filename: c1-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - credit card
+  - credit cards
+  - charge card
+  - card spending
+  - card transactions
+  - retail spending
+  - consumer spending
+  - card balances
+  - bnpl
+  - payments
+  - cash advances
+  - card purchases
+  - rba c1
+series:
+  number_of_transactions:
+    series_id: CCCCSTTNSA
+    description: Total number of credit/charge-card transactions in Australia per month, '000 (seasonally adjusted)
+    unit: "'000"
+  value_of_transactions:
+    series_id: CCCCSTTVSA
+    description: Total value of credit/charge-card transactions per month, $ million (seasonally adjusted)
+    unit: $ million
+  number_of_purchases:
+    series_id: CCCCSTPNSA
+    description: Number of purchases (excludes cash advances), '000 per month (seasonally adjusted)
+    unit: "'000"
+  value_of_purchases:
+    series_id: CCCCSTPVSA
+    description: Value of purchases (excludes cash advances), $ million per month (seasonally adjusted)
+    unit: $ million
+  number_of_domestic_purchases:
+    series_id: CCCCSPDNSA
+    description: Number of domestic purchases on Australian-issued cards, '000 per month
+    unit: "'000"
+  value_of_domestic_purchases:
+    series_id: CCCCSPDVSA
+    description: Value of domestic purchases on Australian-issued cards, $ million per month
+    unit: $ million
+  number_of_overseas_purchases:
+    series_id: CCCCSPFNSA
+    description: Number of overseas purchases on Australian-issued cards, '000 per month
+    unit: "'000"
+  value_of_overseas_purchases:
+    series_id: CCCCSPFVSA
+    description: Value of overseas purchases on Australian-issued cards, $ million per month
+    unit: $ million
+  number_of_cash_advances:
+    series_id: CCCCSTCANSA
+    description: Number of cash advances per month, '000 (seasonally adjusted)
+    unit: "'000"
+  value_of_cash_advances:
+    series_id: CCCCSTCAVSA
+    description: Value of cash advances per month, $ million (seasonally adjusted)
+    unit: $ million
+  repayments:
+    series_id: CCCCSRSA
+    description: Total repayments made by cardholders per month, $ million (seasonally adjusted)
+    unit: $ million
+  balances_accruing_interest:
+    series_id: CCCCSBAISA
+    description: Outstanding balances accruing interest (revolving credit), $ million (seasonally adjusted)
+    unit: $ million
+  total_balances:
+    series_id: CCCCSBTSA
+    description: Total outstanding balances on credit/charge cards, $ million (seasonally adjusted)
+    unit: $ million

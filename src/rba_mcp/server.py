@@ -598,6 +598,12 @@ async def _get_data_impl(
     df = filter_by_dates(df, start_date_validated, end_date_validated)
 
     if last_n is not None and not df.empty:
+        # Drop trailing rows where every selected series is null before
+        # taking the tail. RBA tables sometimes carry forward-dated empty
+        # rows (e.g. G3 has future quarterly periods that backward-looking
+        # series like consumer expectations don't populate). Without this,
+        # latest() would return an all-null row for those series.
+        df = df.dropna(how="all")
         df = df.tail(last_n)
 
     resp = build_response(

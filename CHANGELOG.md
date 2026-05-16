@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.6.0] - 2026-05-16
+
+### Added — C1 credit-card statistics + G3 inflation expectations
+
+- **`C1` — Credit and Charge Card Statistics (Monthly).** 13 curated
+  series covering monthly card transactions: total number/value of
+  transactions and purchases, domestic vs overseas splits, cash advances,
+  repayments, total balances, balances accruing interest. The fastest
+  way to track Australian consumer credit-card spend signal. Series
+  back to mid-1980s. Realistic latest values verified: ~333M purchases
+  per month, ~$41B value, ~$44B total outstanding balances (Mar 2026).
+- **`G3` — Inflation Expectations (Quarterly).** All 7 series from RBA's
+  inflation-expectations table: 1-year consumer expectations (Melbourne
+  Institute), 3-month business expectations (NAB), 1-/2-year union
+  officials, 1-/2-year market economists, plus the break-even 10-year
+  inflation rate implied by AGS yields. Critical for bond traders
+  pricing real rates and macro analysts tracking expectations anchoring.
+- Both tables registered in `tables.yaml` (total catalogue now 23) and
+  shipped with curated series mappings.
+
+### Fixed — `latest()` skips trailing-null forecast rows
+
+- `latest()` previously returned an all-null row when the file's most
+  recent date had no value for the requested series. G3 surfaced this:
+  RBA carries forward-dated empty rows (2026-Q3 / Q4 / 2027-Q1) for
+  forecast-cadence series, and backward-looking series like consumer
+  expectations don't populate those rows. The shaping path now drops
+  all-null rows BEFORE taking `tail(last_n)`, so `latest()` always
+  returns the most recent date with at least one non-null value for
+  the requested series. F-tables that don't carry forward-dated empty
+  rows are unaffected.
+
+### Customer-value validation (live RBA fetch, 2026-05-16)
+
+- Retail analyst: `latest('C1', 'value_of_purchases')` → $40,890m (Mar
+  2026); `latest('C1', 'total_balances')` → $44,146m.
+- Bond trader: `latest('G3', 'consumer_expectations_1yr')` → 5.2%
+  (Mar 2026); `latest('G3', 'break_even_10yr')` → 2.4%.
+- Search routing: "card transactions" → C1 at #1; "inflation
+  expectations" / "break-even inflation" → G3 at #1.
+
+### Tests
+
+- 141 unit tests now (was 134). 10× zero-flake gauntlet. 30 live tests
+  with new C1/G3 value-range assertions.
+
 ## [0.5.0] - 2026-05-16
 
 ### Added — D-series credit aggregates (Wave 1 portfolio expansion)

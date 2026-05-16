@@ -69,10 +69,10 @@ async def test_describe_non_curated_returns_raw_metadata():
     assert all(s.key == s.series_id for s in detail.series)
 
 
-async def test_list_curated_returns_twelve_via_server():
+async def test_list_curated_returns_fourteen_via_server():
     assert set(server.list_curated()) == {
         "F1.1", "F2", "F2.1", "F4", "F5", "F6", "F7", "F8", "F11", "F11.1",
-        "D1", "D2",
+        "D1", "D2", "C1", "G3",
     }
 
 
@@ -90,6 +90,12 @@ async def test_list_curated_returns_twelve_via_server():
     ("D2", "total_credit_excl_financial_sa", 500.0, 10000.0, "$ billion"),
     ("D2", "owner_occupier_housing_sa", 500.0, 5000.0, "$ billion"),
     ("D2", "business_credit_sa", 100.0, 5000.0, "$ billion"),
+    # C1 — credit card statistics (AU monthly aggregates).
+    ("C1", "value_of_purchases", 1000.0, 200000.0, "$ million"),
+    ("C1", "total_balances", 10000.0, 200000.0, "$ million"),
+    # G3 — inflation expectations (typically 0.5%–8%).
+    ("G3", "consumer_expectations_1yr", 0.0, 12.0, "Per cent"),
+    ("G3", "break_even_10yr", -2.0, 10.0, "Per cent"),
 ])
 async def test_curated_table_returns_plausible_value(table, series, low, high, unit):
     resp = await server.latest(table_id=table, series=series)

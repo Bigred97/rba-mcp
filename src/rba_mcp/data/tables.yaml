@@ -110,3 +110,13 @@ tables:
     csv_filename: d2-data.csv
     frequency: Monthly
     search_keywords: [credit levels, lending aggregates, housing credit, business credit, total credit, mortgage stock, owner occupier housing, investor housing, bank loans, non bank financial institutions, nbfi, bills on issue, private sector credit]
+  - id: C1
+    name: Credit and Charge Card Statistics
+    csv_filename: c1-data.csv
+    frequency: Monthly
+    search_keywords: [credit card, charge card, card spending, card transactions, retail spending, consumer spending, card balances, bnpl, payments, cash advances, card purchases]
+  - id: G3
+    name: Inflation Expectations
+    csv_filename: g3-data.csv
+    frequency: Quarterly
+    search_keywords: [inflation expectations, inflation forecast, consumer expectations, market expectations, break-even inflation, inflation psychology, real rates, monetary policy expectations]
