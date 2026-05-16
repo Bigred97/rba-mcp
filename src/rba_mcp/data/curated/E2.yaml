@@ -7,12 +7,13 @@ description: |
   bank strategist, super fund chief economist, RBA / AFR / Treasury
   journalist tracking household leverage cycles.
 
-  Latest snapshot (Q4 2025):
-  - Household debt to income: 177.0% — peaked above 190% during 2019
-  - Housing debt to income: 133.7%
-  - Owner-occupier housing debt to income (SA): 99.6%
-  - Household debt to assets: 16.1%
-  - Household assets to income: 1,102%
+  Headline series are household debt-to-income (total and housing-only,
+  with a seasonally-adjusted owner-occupier variant), household debt-to-
+  assets, and assets-to-income (total, housing-only, financial-only).
+  Together they describe both the liability side (how much households
+  owe) and the asset side (what they own) of the household balance
+  sheet, expressed relative to disposable income. Call `latest('E2')`
+  for current values.
 
   Source: RBA Statistical Table E2. Series back to 1988. Use this for
   "how leveraged are AU households right now?", "where are we in the

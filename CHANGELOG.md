@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.1] - 2026-05-16
+
+### Changed
+- E2 (Household finances): removed hardcoded Q4 2025 snapshot values
+  from description. The values would have gone stale when Q1 2026 data
+  drops in ~June 2026. Callers should use `latest("E2")` to get current
+  values rather than reading them from the dataset description.
+
 ## [0.7.0] - 2026-05-16
 
 ### Added — E2 Household Finances: Selected Ratios
