@@ -1,0 +1,71 @@
+id: E2
+name: Household Finances — Selected Ratios (Quarterly)
+description: |
+  Quarterly household leverage ratios: debt-to-income, debt-to-assets,
+  assets-to-income, housing-only variants. These are the canonical
+  Australian household-finance ratios cited by every macro analyst,
+  bank strategist, super fund chief economist, RBA / AFR / Treasury
+  journalist tracking household leverage cycles.
+
+  Latest snapshot (Q4 2025):
+  - Household debt to income: 177.0% — peaked above 190% during 2019
+  - Housing debt to income: 133.7%
+  - Owner-occupier housing debt to income (SA): 99.6%
+  - Household debt to assets: 16.1%
+  - Household assets to income: 1,102%
+
+  Source: RBA Statistical Table E2. Series back to 1988. Use this for
+  "how leveraged are AU households right now?", "where are we in the
+  household-debt cycle?", "what happens to debt-to-income when rates
+  rise?". Completes the macro workflow alongside F1.1 (cash rate),
+  D1/D2 (credit aggregates), G3 (inflation expectations), C1
+  (card spending), and apra-mcp ADI_PERFORMANCE (bank P&L).
+update_frequency: quarterly
+csv_filename: e2-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - household debt
+  - debt to income
+  - household leverage
+  - mortgage debt
+  - household balance sheet
+  - household debt ratio
+  - housing debt to income
+  - owner occupier debt
+  - household assets to income
+  - household debt to assets
+  - debt servicing
+  - rba e2
+series:
+  household_debt_to_income:
+    series_id: BHFDDIT
+    description: Total household debt as % of disposable income — the canonical leverage ratio
+    unit: Per cent
+  housing_debt_to_income:
+    series_id: BHFDDIH
+    description: Total housing-related household debt as % of disposable income
+    unit: Per cent
+  owner_occupier_debt_to_income:
+    series_id: BHFDDIO
+    description: Owner-occupier housing debt as % of disposable income, seasonally adjusted
+    unit: Per cent
+  household_debt_to_assets:
+    series_id: BHFDA
+    description: Total household debt as % of total household assets
+    unit: Per cent
+  housing_debt_to_housing_assets:
+    series_id: BHFHDHA
+    description: Housing-related debt as % of housing-related assets (LVR-equivalent for the sector)
+    unit: Per cent
+  household_assets_to_income:
+    series_id: BHFADIT
+    description: Total household assets (housing + financial) as % of disposable income
+    unit: Per cent
+  housing_assets_to_income:
+    series_id: BHFHDI
+    description: Housing assets only as % of disposable income
+    unit: Per cent
+  financial_assets_to_income:
+    series_id: BHFADIFA
+    description: Household financial assets only (deposits, super, equities) as % of disposable income
+    unit: Per cent

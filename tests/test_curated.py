@@ -10,11 +10,11 @@ def reset():
     curated.reset_registry()
 
 
-def test_list_ids_returns_fourteen():
+def test_list_ids_returns_fifteen():
     assert set(curated.list_ids()) == {
         "F1.1", "F2", "F2.1", "F4", "F5",
         "F6", "F7", "F8", "F11", "F11.1",
-        "D1", "D2", "C1", "G3",
+        "D1", "D2", "C1", "G3", "E2",
     }
 
 
@@ -66,6 +66,16 @@ def test_get_g3_loads_inflation_expectations():
     assert "consumer_expectations_1yr" in g3.series
     assert g3.series["consumer_expectations_1yr"].series_id == "GCONEXP"
     assert g3.series["break_even_10yr"].series_id == "GBONYLD"
+
+
+def test_get_e2_loads_household_ratios():
+    e2 = curated.get("E2")
+    assert e2 is not None
+    assert e2.csv_filename == "e2-data.csv"
+    assert "household_debt_to_income" in e2.series
+    assert e2.series["household_debt_to_income"].series_id == "BHFDDIT"
+    assert e2.series["owner_occupier_debt_to_income"].series_id == "BHFDDIO"
+    assert e2.series["household_debt_to_income"].unit == "Per cent"
 
 
 def test_get_case_insensitive():

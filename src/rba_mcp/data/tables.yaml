@@ -120,3 +120,8 @@ tables:
     csv_filename: g3-data.csv
     frequency: Quarterly
     search_keywords: [inflation expectations, inflation forecast, consumer expectations, market expectations, break-even inflation, inflation psychology, real rates, monetary policy expectations]
+  - id: E2
+    name: Household Finances - Selected Ratios
+    csv_filename: e2-data.csv
+    frequency: Quarterly
+    search_keywords: [household debt, debt to income, household leverage, mortgage debt ratio, household balance sheet, housing debt to income, owner occupier debt, household assets to income, household debt to assets, debt servicing]

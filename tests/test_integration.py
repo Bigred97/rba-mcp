@@ -69,10 +69,10 @@ async def test_describe_non_curated_returns_raw_metadata():
     assert all(s.key == s.series_id for s in detail.series)
 
 
-async def test_list_curated_returns_fourteen_via_server():
+async def test_list_curated_returns_fifteen_via_server():
     assert set(server.list_curated()) == {
         "F1.1", "F2", "F2.1", "F4", "F5", "F6", "F7", "F8", "F11", "F11.1",
-        "D1", "D2", "C1", "G3",
+        "D1", "D2", "C1", "G3", "E2",
     }
 
 
@@ -96,6 +96,10 @@ async def test_list_curated_returns_fourteen_via_server():
     # G3 — inflation expectations (typically 0.5%–8%).
     ("G3", "consumer_expectations_1yr", 0.0, 12.0, "Per cent"),
     ("G3", "break_even_10yr", -2.0, 10.0, "Per cent"),
+    # E2 — household leverage ratios. DTI 100-250%, assets-to-income 800-1500%.
+    ("E2", "household_debt_to_income", 100.0, 250.0, "Per cent"),
+    ("E2", "owner_occupier_debt_to_income", 50.0, 200.0, "Per cent"),
+    ("E2", "household_assets_to_income", 800.0, 1500.0, "Per cent"),
 ])
 async def test_curated_table_returns_plausible_value(table, series, low, high, unit):
     resp = await server.latest(table_id=table, series=series)

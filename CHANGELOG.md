@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.7.0] - 2026-05-16
+
+### Added — E2 Household Finances: Selected Ratios
+
+- **`E2` curated table.** 8 quarterly series of Australian household
+  leverage ratios — the canonical figures every macro analyst cites
+  for household-debt-cycle narratives.
+- Headline series: household debt-to-income (BHFDDIT), housing debt-to-
+  income (BHFDDIH), owner-occupier debt-to-income SA (BHFDDIO),
+  household debt-to-assets (BHFDA), household assets-to-income
+  (BHFADIT), housing assets-to-income (BHFHDI), financial assets-to-
+  income (BHFADIFA), housing debt-to-housing-assets (BHFHDHA).
+- **Customer workflow extension** (macro persona — bank strategists,
+  super fund chief economists, AFR journalists, Treasury): unifies the
+  3 critical debt-to-income signals plus assets-to-income in one
+  50-year time series. Previously these required cross-referencing ABS
+  household balance sheets + APRA — now answered in one rba-mcp call.
+- Joins naturally with: F6 (housing rates impact DTI), apra.ADI_PERFORMANCE
+  (bank sector tracks household leverage), abs.HSI_M (consumer spending
+  under rate pressure), abs.ANA_AGG (national accounts).
+
+### Customer-value validation (live RBA fetch, 2026-05-16)
+
+- `latest('E2', 'household_debt_to_income')` → 177.0% (Q4 2025).
+  Peaked >190% pre-COVID, now deleveraging post-rate-hikes.
+- `latest('E2', 'owner_occupier_debt_to_income')` → 99.6%.
+- `latest('E2', 'household_assets_to_income')` → 1,102%.
+- 6-year time series (2020+): DTI fell from 186.2% (Q1 2020) → 177.0%
+  (Q4 2025) — the post-COVID rate-hike deleveraging story.
+- Search routing: "household debt", "debt to income", "household
+  leverage", "mortgage debt ratio" all hit E2 at #1.
+
+### Tests
+
+- 145 unit tests passing (was 141). 10× zero-flake.
+
 ## [0.6.0] - 2026-05-16
 
 ### Added — C1 credit-card statistics + G3 inflation expectations
