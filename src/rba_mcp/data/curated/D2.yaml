@@ -16,6 +16,9 @@ description: |
 update_frequency: monthly
 csv_filename: d2-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. Seasonally-adjusted total
+# credit excluding financial businesses is the current RBA headline level.
+headline_series: total_credit_excl_financial_sa
 search_keywords:
   - credit aggregates
   - lending aggregates

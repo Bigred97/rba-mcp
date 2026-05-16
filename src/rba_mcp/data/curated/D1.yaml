@@ -15,6 +15,10 @@ description: |
 update_frequency: monthly
 csv_filename: d1-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. 12-month-ended total private
+# credit growth (excluding financial businesses) is the current RBA headline
+# and the single number cited in monetary-policy commentary.
+headline_series: total_credit_excl_financial_yoy
 search_keywords:
   - credit growth
   - credit aggregates

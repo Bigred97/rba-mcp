@@ -8,6 +8,9 @@ description: |
 update_frequency: monthly
 csv_filename: f11-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. AUD/USD is the headline FX
+# pair quoted in every Australian market commentary.
+headline_series: aud_usd
 search_keywords:
   - exchange rate history
   - aud history

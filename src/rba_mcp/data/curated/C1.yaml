@@ -14,6 +14,10 @@ description: |
 update_frequency: monthly
 csv_filename: c1-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. Value of purchases is the
+# headline credit-card-spend number — what retail/macro commentary cites
+# when discussing card spend volume.
+headline_series: value_of_purchases
 search_keywords:
   - credit card
   - credit cards

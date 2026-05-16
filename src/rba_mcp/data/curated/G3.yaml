@@ -14,6 +14,9 @@ description: |
 update_frequency: quarterly
 csv_filename: g3-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. 1-year consumer expectations
+# (Melbourne Institute) is the most-cited inflation-expectations headline.
+headline_series: consumer_expectations_1yr
 search_keywords:
   - inflation expectations
   - inflation forecast

@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.7.2] - 2026-05-16
+
+### Fixed — `latest()` / `get_data()` no-series default returns headline only
+
+- **The "no filter = which series?" bug.** Previously, `latest("F1.1")` with
+  no `series` argument returned every curated series in the table mixed
+  together (11 series for F1.1: cash rate target, interbank, bank bills,
+  Treasury notes, OIS — totalling ~11 records for a single date), which
+  looked like duplicate / garbage data to LLM clients. Same issue affected
+  every curated F-table (F11/F11.1: 8-9 FX rates; D1: 20 growth series;
+  E2: 8 leverage ratios).
+- **Fix.** Each curated YAML now declares a `headline_series:` field — the
+  canonical "what does this table mean?" series. When the caller omits
+  `series`, the server defaults to just that single series. Callers wanting
+  the full set pass an explicit list of keys.
+- Headline assignments: F1.1 → `cash_rate_target`, F2/F2.1 → `bond_10yr`,
+  F4 → `term_deposit_12m`, F5 → `housing_variable_standard`, F6 →
+  `owner_occupier_variable_existing`, F7 → `outstanding_small_business_total`,
+  F8 → `outstanding_credit_card`, F11/F11.1 → `aud_usd`, D1 →
+  `total_credit_excl_financial_yoy`, D2 → `total_credit_excl_financial_sa`,
+  C1 → `value_of_purchases`, G3 → `consumer_expectations_1yr`, E2 →
+  `household_debt_to_income`.
+- Validated at load: a YAML whose `headline_series` references an undefined
+  key fails with a clear `ValueError` rather than surfacing at query time.
+- **No breaking change** for callers that already pass `series=` explicitly —
+  the behaviour is identical. The change only affects callers that relied
+  on the (broken) "give me everything" default.
+
+### Tests
+
+- 154 unit tests passing (was 145). 10× zero-flake gauntlet. Added
+  regression coverage for the headline default and the `series=None`
+  → headline resolution path.
+
 ## [0.7.1] - 2026-05-16
 
 ### Changed

@@ -24,6 +24,9 @@ description: |
 update_frequency: quarterly
 csv_filename: e2-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. Total household debt-to-income
+# is the canonical leverage ratio cited in macro commentary.
+headline_series: household_debt_to_income
 search_keywords:
   - household debt
   - debt to income

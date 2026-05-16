@@ -11,6 +11,10 @@ description: |
 update_frequency: monthly
 csv_filename: f7-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. Small-business outstanding
+# total is the most-cited single number — SME lending stress is the canonical
+# business-credit story.
+headline_series: outstanding_small_business_total
 search_keywords:
   - business lending rate
   - business loan rate

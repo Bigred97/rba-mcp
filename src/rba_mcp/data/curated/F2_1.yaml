@@ -8,6 +8,9 @@ description: |
 update_frequency: monthly
 csv_filename: f2.1-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. 10-year AGS yield is the
+# benchmark long-rate quoted in macro commentary.
+headline_series: bond_10yr
 search_keywords:
   - government bond yield monthly
   - bond yield history

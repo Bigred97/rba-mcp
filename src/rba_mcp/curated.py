@@ -34,6 +34,16 @@ class CuratedTable:
     csv_filename: str
     search_keywords: tuple[str, ...] = ()
     series: dict[str, CuratedSeries] = field(default_factory=dict)
+    # Curated key returned when caller omits `series`. RBA F-tables are flat
+    # multi-series matrices — F1.1 carries 11 series (cash rate target, OIS,
+    # bank bills, Treasury notes, etc.) and returning all of them mixed
+    # together when the caller asked for "the F1.1 number" looked like
+    # duplicate/garbage data. Defaulting to the canonical headline series
+    # for each table fixes the ergonomics. Callers wanting the full set
+    # pass an explicit list of series keys. None preserves the original
+    # "return everything" behaviour for tables where one headline doesn't
+    # dominate.
+    headline_series: str | None = None
 
 
 _REGISTRY: dict[str, CuratedTable] | None = None
@@ -66,6 +76,16 @@ def _load_one(path: Path) -> CuratedTable:
         key: _parse_series(s_raw)
         for key, s_raw in (raw.get("series") or {}).items()
     }
+    headline = raw.get("headline_series")
+    headline_str = str(headline) if headline is not None else None
+    # Refuse to load a YAML whose headline_series points at a key that doesn't
+    # exist in the same file — that's a silent data bug that would cause the
+    # whole table to look broken at query time. Surface it at load.
+    if headline_str is not None and headline_str not in series:
+        raise ValueError(
+            f"Curated table {raw['id']}: headline_series {headline_str!r} is "
+            f"not defined under `series:`. Valid keys: {sorted(series)}"
+        )
     return CuratedTable(
         id=str(raw["id"]),
         name=str(raw["name"]),
@@ -75,6 +95,7 @@ def _load_one(path: Path) -> CuratedTable:
         csv_filename=str(raw["csv_filename"]),
         search_keywords=tuple(raw.get("search_keywords") or ()),
         series=series,
+        headline_series=headline_str,
     )
 
 
@@ -110,13 +131,25 @@ def translate_series(
 ) -> list[str]:
     """Translate plain-English keys → RBA series IDs.
 
-    - None / empty → all curated series IDs (the default behaviour)
+    - None → the curated table's `headline_series` if defined (a single
+      canonical series — e.g. F1.1 → cash rate target, F11 → AUD/USD);
+      otherwise all curated series IDs (fall-back for tables without a
+      single dominant headline).
     - "key" → [series_id]
     - ["key1", "key2"] → [series_id1, series_id2]
     - Raw RBA series IDs pass through (escape hatch for power users).
     Empty list / empty string raises ValueError with a useful hint.
+
+    Note: pre-0.8.0 the None case returned every curated series, which
+    surfaced as duplicate / garbage-looking data for the LLM (F1.1 mixed
+    cash rate target with bank bills and Treasury notes). The headline
+    default keeps the no-filter UX ergonomic; callers wanting the whole
+    table now pass an explicit list of keys.
     """
     if requested is None:
+        if curated.headline_series is not None:
+            headline = curated.series[curated.headline_series]
+            return [headline.series_id]
         return [s.series_id for s in curated.series.values()]
     items: list[str]
     if isinstance(requested, list):
@@ -126,8 +159,10 @@ def translate_series(
             raise ValueError(
                 f"series filter is an empty list. "
                 f"Pass at least one series (e.g. {example!r}), or omit "
-                f"`series` to query all curated series for {curated.id}. "
-                f"Try describe_table('{curated.id}') to see valid keys."
+                f"`series` to use the headline series for {curated.id}. "
+                f"Valid series keys: {', '.join(valid_keys[:10])}"
+                + ("..." if len(valid_keys) > 10 else "")
+                + "."
             )
         items = requested
     else:

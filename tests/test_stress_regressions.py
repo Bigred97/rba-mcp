@@ -391,3 +391,75 @@ async def test_search_bond_yields_routes_to_f2():
     assert "F2" in ids or "F2.1" in ids, (
         f"bond yields query should surface F2/F2.1 in top 5, got: {ids}"
     )
+
+
+# ----- Item 6 regression: headline_series default for no-series calls ---
+#
+# Before this change, `latest("F1.1")` returned every curated series mixed
+# together (11 for F1.1, 9 for F11.1) which looked like duplicate/garbage
+# data to LLM clients. The fix defaults to the curated table's
+# headline_series — a single canonical observation per table.
+
+
+async def test_latest_no_series_returns_only_headline_f1_1():
+    """F1.1 headline = cash_rate_target (FIRMMCRT)."""
+    resp = await server.latest(table_id="F1.1")
+    assert len(resp.records) == 1, (
+        f"expected exactly 1 record (headline only), got {len(resp.records)}"
+    )
+    obs = resp.records[0]
+    assert obs.dimensions["table"] == "F1.1"
+    series_label = obs.dimensions["series"].lower()
+    # The display name comes from the curated description — confirm it
+    # mentions cash rate target rather than e.g. an OIS or bank-bill series.
+    assert "cash rate target" in series_label or "cash" in series_label, (
+        f"expected headline cash rate target, got: {series_label!r}"
+    )
+
+
+async def test_latest_no_series_returns_only_headline_f11_1():
+    """F11.1 headline = aud_usd (FXRUSD). Pre-fix returned 8 FX series."""
+    resp = await server.latest(table_id="F11.1")
+    assert len(resp.records) == 1, (
+        f"expected exactly 1 record (aud_usd headline), got {len(resp.records)}"
+    )
+    assert resp.records[0].unit == "USD per AUD"
+
+
+async def test_latest_explicit_series_still_works_after_headline_default():
+    """The headline default must not break explicit-series calls.
+
+    A caller passing `series='FXRUSD'` (raw ID, what the spec example uses)
+    must still get back exactly that one series.
+    """
+    resp = await server.latest(table_id="F11.1", series="FXRUSD")
+    assert len(resp.records) == 1
+    assert resp.records[0].dimensions["table"] == "F11.1"
+
+
+async def test_get_data_no_series_returns_only_headline():
+    """Same default applies to `get_data()` — no series means headline.
+
+    Pre-fix this returned every series across the date range, which made
+    F1.1 (11 series × 12 months = 132 records) look like garbage data.
+    """
+    resp = await server.get_data(
+        table_id="F1.1", start_date="2024", end_date="2024-06"
+    )
+    # All records should be the same series (cash rate target)
+    series_labels = {r.dimensions["series"] for r in resp.records}
+    assert len(series_labels) == 1, (
+        f"expected only headline series, got {series_labels}"
+    )
+
+
+async def test_latest_multi_series_list_overrides_headline():
+    """Passing an explicit list still works — caller gets exactly those
+    series, not the headline."""
+    resp = await server.latest(
+        table_id="F11.1", series=["aud_usd", "aud_eur"]
+    )
+    series_labels = {r.dimensions["series"] for r in resp.records}
+    assert len(series_labels) == 2, (
+        f"expected 2 distinct series in explicit list, got {series_labels}"
+    )

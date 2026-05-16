@@ -7,6 +7,13 @@ description: |
 update_frequency: monthly
 csv_filename: f1.1-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. F1.1 carries 11 distinct
+# series — cash rate target, interbank, bank bills, OIS, Treasury notes —
+# and returning them all mixed together looked like duplicated/garbage data.
+# The cash rate target is the headline monetary-policy rate; defaulting to
+# it matches the most common ask. Callers wanting all series should pass
+# series=list(...) explicitly.
+headline_series: cash_rate_target
 search_keywords:
   - cash rate
   - cash rate target

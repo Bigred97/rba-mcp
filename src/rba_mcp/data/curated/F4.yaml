@@ -7,6 +7,10 @@ description: |
 update_frequency: monthly
 csv_filename: f4-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. The 12-month term deposit
+# is the most-cited retail deposit headline (banks advertise the 1-year rate
+# in window displays); defaulting to it matches typical retail-finance asks.
+headline_series: term_deposit_12m
 search_keywords:
   - deposit rates
   - savings rates

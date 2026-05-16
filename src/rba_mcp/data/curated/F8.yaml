@@ -11,6 +11,9 @@ description: |
 update_frequency: monthly
 csv_filename: f8-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. Credit-card interest rate is
+# the most-asked household-credit number ("what's the credit card rate?").
+headline_series: outstanding_credit_card
 search_keywords:
   - personal loan rate
   - credit card interest rate

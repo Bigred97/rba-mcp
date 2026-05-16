@@ -95,14 +95,14 @@ def _validate_series(series: Any) -> str | list[str] | None:
         if not s:
             raise ValueError(
                 "series is an empty string. Pass a curated key like 'aud_usd' or 'cash_rate_target', "
-                "or omit `series` to query all curated series."
+                "or omit `series` to use the table's headline series."
             )
         return s
     if isinstance(series, list):
         if not series:
             raise ValueError(
                 "series is an empty list. Pass at least one series, "
-                "or omit `series` to query all curated series."
+                "or omit `series` to use the table's headline series."
             )
         out: list[str] = []
         for s in series:
@@ -126,8 +126,8 @@ def _validate_series(series: Any) -> str | list[str] | None:
     raise ValueError(
         f"series must be a string or list of strings, got {type(series).__name__}. "
         "Pass a single key (e.g. 'aud_usd'), a list of keys "
-        "(e.g. ['aud_usd', 'aud_eur']), or omit to query all curated series. "
-        "Try describe_table('<table_id>') to discover valid keys."
+        "(e.g. ['aud_usd', 'aud_eur']), or omit to use the table's headline series. "
+        "See describe_table('<table_id>') for valid keys."
     )
 
 
@@ -643,7 +643,10 @@ async def get_data(
                 "Which series to return. For curated tables: plain-English keys "
                 "(e.g. 'aud_usd', 'cash_rate_target') or a list for multi-series. "
                 "For raw F-tables: raw RBA series IDs (e.g. 'FXRUSD'). "
-                "Pass None (default) to return all curated series in the table."
+                "Pass None (default) to use the table's headline series — e.g. F1.1 "
+                "defaults to the cash rate target, F11/F11.1 to AUD/USD, F6 to the "
+                "owner-occupier outstanding variable rate. Pass an explicit list to "
+                "fetch multiple series."
             ),
             examples=[
                 "cash_rate_target",
@@ -714,23 +717,32 @@ async def get_data(
 ) -> DataResponse:
     """Query an RBA F-table and return observations.
 
-    Curated tables (F1.1, F4, F6, F11, F11.1) accept plain-English series
-    keys that map to canonical RBA series IDs server-side. Pass a list of
-    keys for a multi-series query, or omit `series` to get every curated
-    series in the table.
+    Curated tables accept plain-English series keys that map to canonical
+    RBA series IDs server-side. Omit `series` to get the table's headline
+    series (e.g. F1.1 → cash rate target, F11/F11.1 → AUD/USD, F6 → owner-
+    occupier outstanding variable rate). Pass an explicit list for a multi-
+    series query.
 
     Examples:
         # Cash rate target since 2020 (portfolio-standard name)
         resp = await get_data("F1.1", series="cash_rate_target", start_period="2020")
         # → resp.records[0]: period='2020-01-01', value=0.25, series='cash_rate_target'
 
-        # All FX rates against AUD, last year
+        # Headline default — no series arg returns the table's canonical series
         resp = await get_data("F11.1", start_period="2024-01-01", end_period="2024-12-31")
-        # → resp.records covers aud_usd, aud_eur, aud_jpy, aud_cny, ... daily
+        # → resp.records: AUD/USD daily (the headline) for the period
+
+        # Multiple FX rates — pass an explicit list
+        resp = await get_data(
+            "F11.1",
+            series=["aud_usd", "aud_eur", "aud_jpy"],
+            start_period="2024-01-01",
+            end_period="2024-12-31",
+        )
 
         # Mortgage rates as CSV
         resp = await get_data("F6", format="csv", start_period="2023")
-        # → resp.csv = "date,series,value\n2023-01-01,housing_standard_variable,..."
+        # → resp.csv = "date,series,value\n2023-01-01,..."
 
         # Raw (non-curated) F-table — pass raw RBA series IDs
         resp = await get_data("F1", series=["FIRMMCRTD", "FIRMMBAB30"])
@@ -777,8 +789,9 @@ async def latest(
         Field(
             description=(
                 "Which series to return. For curated tables: plain-English keys. "
-                "Pass None (default) to get the latest observation for every "
-                "curated series in the table — useful for dashboards."
+                "Pass None (default) to get the table's headline series — e.g. "
+                "F1.1 returns the cash rate target, F11/F11.1 returns AUD/USD. "
+                "Pass an explicit list to get multiple series in one snapshot."
             ),
             examples=[
                 "cash_rate_target",
@@ -794,25 +807,29 @@ async def latest(
     "what's the current X?" questions — it's a cheap, fast call.
 
     Examples:
-        # Current cash rate target
+        # Current cash rate target (explicit)
         resp = await latest("F1.1", series="cash_rate_target")
         # → resp.records[0]: period='2026-05-06', value=3.85, unit='Per cent per annum'
 
-        # All AUD FX rates in one call (curated dashboard pattern)
-        resp = await latest("F11.1")
-        # → resp.records: latest aud_usd, aud_eur, aud_jpy, aud_cny, etc.
+        # Headline default — no series arg returns the table's canonical series.
+        # F1.1 → cash rate target; F11/F11.1 → AUD/USD; F6 → average mortgage rate.
+        resp = await latest("F1.1")
+        # → resp.records[0]: cash_rate_target only (the table's headline)
 
-        # Latest standard variable mortgage rate
-        resp = await latest("F6", series="housing_standard_variable")
+        # Snapshot multiple FX rates in one call
+        resp = await latest("F11.1", series=["aud_usd", "aud_eur", "aud_jpy"])
+
+        # Latest owner-occupier variable mortgage rate
+        resp = await latest("F6", series="owner_occupier_variable_existing")
 
     When to use:
         - You want the current value of an RBA indicator
         - You want a current-snapshot of multiple series in one call
-          (e.g. `latest("F11.1")` returns every FX rate)
+          (pass an explicit list — e.g. all FX rates)
         - You want sub-50ms warm-cache latency for chat integration
 
     Returns:
-        DataResponse with one most-recent observation per series.
+        DataResponse with one most-recent observation per requested series.
     """
     return await _get_data_impl(table_id, series, None, None, "records", last_n=1)
 

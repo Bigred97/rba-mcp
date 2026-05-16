@@ -8,6 +8,10 @@ description: |
 update_frequency: monthly
 csv_filename: f6-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. The owner-occupier outstanding
+# variable rate is what every commentator means by "the average mortgage rate".
+# Note: the table's own description already calls it the headline.
+headline_series: owner_occupier_variable_existing
 search_keywords:
   - mortgage rates
   - home loan rates

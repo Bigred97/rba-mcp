@@ -99,12 +99,83 @@ def test_translate_series_raw_id_passes_through():
     assert curated.translate_series(f11, ["FXRUSD", "FXRTWI"]) == ["FXRUSD", "FXRTWI"]
 
 
-def test_translate_series_none_returns_all_curated():
+def test_translate_series_none_returns_headline_when_defined():
+    """series=None now resolves to the curated table's headline series
+    (Item 6 — the 'no filter = which series?' bug).
+
+    F11's headline is aud_usd (FXRUSD). Pre-0.8.0 this returned every
+    curated series, which looked like duplicate/garbage data to LLMs.
+    Callers wanting the full set must pass an explicit list.
+    """
     f11 = curated.get("F11")
+    assert f11.headline_series == "aud_usd"
     out = curated.translate_series(f11, None)
+    assert out == ["FXRUSD"], (
+        f"series=None should resolve to the headline (FXRUSD), got {out}"
+    )
+
+
+def test_translate_series_none_returns_all_when_no_headline():
+    """If a table has no headline_series defined, fall back to "all curated"
+    so this code path keeps working for future tables that don't have a
+    single dominant headline."""
+    from dataclasses import replace
+    f11 = curated.get("F11")
+    fake = replace(f11, headline_series=None)
+    out = curated.translate_series(fake, None)
+    # Order preserved from the YAML
     assert "FXRUSD" in out
     assert "FXRTWI" in out
-    assert len(out) == len(f11.series)
+    assert len(out) == len(fake.series)
+
+
+def test_all_curated_tables_have_headline_series():
+    """Item 6 acceptance: every curated table must declare a headline_series
+    so `latest("X")` and `get_data("X")` with no series return a single
+    canonical observation rather than a 14-series soup."""
+    missing = []
+    for cid in curated.list_ids():
+        c = curated.get(cid)
+        if c.headline_series is None:
+            missing.append(cid)
+    assert not missing, f"curated tables without headline_series: {missing}"
+
+
+def test_headline_series_resolves_to_a_known_key():
+    """Each headline_series must reference a key defined under `series:` in the
+    same file — otherwise the load layer raises, but lock the invariant in
+    pytest too so regressions surface in CI rather than at first call."""
+    for cid in curated.list_ids():
+        c = curated.get(cid)
+        if c.headline_series is not None:
+            assert c.headline_series in c.series, (
+                f"{cid}: headline_series {c.headline_series!r} not in series keys "
+                f"{sorted(c.series)}"
+            )
+
+
+def test_headline_series_invalid_key_raises_at_load(tmp_path, monkeypatch):
+    """A curated YAML whose headline_series doesn't match any defined series
+    must fail loudly at registry load, not silently at query time."""
+    bad_yaml = tmp_path / "BADTABLE.yaml"
+    bad_yaml.write_text(
+        "id: BADTABLE\n"
+        "name: Bad table\n"
+        "csv_filename: bad-data.csv\n"
+        "headline_series: not_a_real_key\n"
+        "series:\n"
+        "  some_key:\n"
+        "    series_id: FAKE\n"
+    )
+    from rba_mcp import curated as curated_mod
+
+    def fake_yaml_dir():
+        return tmp_path
+    monkeypatch.setattr(curated_mod, "_yaml_dir", fake_yaml_dir)
+    curated_mod.reset_registry()
+    with pytest.raises(ValueError, match="headline_series 'not_a_real_key'"):
+        curated_mod.list_ids()
+    curated_mod.reset_registry()
 
 
 def test_translate_series_unknown_raises_with_hint():

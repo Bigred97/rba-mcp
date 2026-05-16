@@ -12,6 +12,10 @@ description: |
 update_frequency: daily
 csv_filename: f2-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. The 10-year AGS yield is the
+# benchmark risk-free rate quoted in every market commentary; defaulting to it
+# matches the most common ask for "the bond yield".
+headline_series: bond_10yr
 search_keywords:
   - government bond yield
   - bond yield

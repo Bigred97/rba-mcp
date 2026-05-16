@@ -14,6 +14,10 @@ description: |
 update_frequency: monthly
 csv_filename: f5-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. The standard variable rate for
+# owner-occupier housing is the canonical advertised lending rate cited by
+# banks and journalists alike.
+headline_series: housing_variable_standard
 search_keywords:
   - indicator lending rate
   - advertised rate
