@@ -1275,7 +1275,7 @@ wheels = [
 
 [[package]]
 name = "rba-mcp"
-version = "0.3.0"
+version = "0.4.1"
 source = { editable = "." }
 dependencies = [
     { name = "aiosqlite" },

@@ -69,9 +69,10 @@ async def test_describe_non_curated_returns_raw_metadata():
     assert all(s.key == s.series_id for s in detail.series)
 
 
-async def test_list_curated_returns_ten_via_server():
+async def test_list_curated_returns_twelve_via_server():
     assert set(server.list_curated()) == {
         "F1.1", "F2", "F2.1", "F4", "F5", "F6", "F7", "F8", "F11", "F11.1",
+        "D1", "D2",
     }
 
 
@@ -83,6 +84,12 @@ async def test_list_curated_returns_ten_via_server():
     ("F11", "twi", 40.0, 110.0, "Index"),
     ("F11.1", "aud_usd", 0.4, 1.5, "USD per AUD"),
     ("F11.1", "aud_eur", 0.3, 1.0, "EUR per AUD"),
+    # D-series — credit aggregates. YoY growth typically -5% to +25%; level in $B.
+    ("D1", "housing_credit_yoy", -5.0, 30.0, "Per cent"),
+    ("D1", "business_credit_yoy", -10.0, 30.0, "Per cent"),
+    ("D2", "total_credit_excl_financial_sa", 500.0, 10000.0, "$ billion"),
+    ("D2", "owner_occupier_housing_sa", 500.0, 5000.0, "$ billion"),
+    ("D2", "business_credit_sa", 100.0, 5000.0, "$ billion"),
 ])
 async def test_curated_table_returns_plausible_value(table, series, low, high, unit):
     resp = await server.latest(table_id=table, series=series)

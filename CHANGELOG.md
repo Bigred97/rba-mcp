@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.5.0] - 2026-05-16
+
+### Added — D-series credit aggregates (Wave 1 portfolio expansion)
+
+- **`D1` — Growth in Selected Financial Aggregates (Monthly).** 20 series
+  covering monthly and 12-month-ended growth (%) for: total private-sector
+  credit, housing credit (split owner-occupier / investor), non-financial
+  business credit, other personal credit, M3 and broad money. This is the
+  most-cited macro statistic after CPI for property and bank-credit commentary.
+- **`D2` — Lending and Credit Aggregates (Monthly).** 20 series covering the
+  $ billion outstanding stock of credit by category: total credit (excl.
+  financial businesses), owner-occupier and investor housing, non-financial
+  business credit, other personal, plus loans-and-advances by intermediary
+  type. Where D1 reports growth rates, D2 reports the underlying levels.
+- Both tables published from 1976 (D2) / 1977 (D1) to present, monthly cadence.
+- Both registered in `tables.yaml` (total catalogue now 21) and added as
+  curated YAMLs with series-mapping definitions.
+- Series IDs map to the **current RBA headline definitions** post-2019
+  redefinition: `business_credit_yoy` → DGFACBNF12 (non-financial business),
+  `total_credit_excl_financial_sa` → DLCACFS. Legacy series IDs that RBA
+  discontinued in 2019 (DGFACB12, DLCACS, DLCACBS, etc.) are not included.
+
+### Tests
+
+- 134 unit tests now (was 131); 10× zero-flake gauntlet.
+- Live tests now cover D1 and D2 with realistic value-range assertions
+  (housing credit YoY -5% to +30%, mortgage stock $500B-$5T, etc.).
+- New `test_get_d1_loads_growth_series` and `test_get_d2_loads_level_series`
+  curated-registry tests.
+- Search-routing tests added for "credit growth", "credit aggregates",
+  "housing credit growth", "business credit growth", and "total credit"
+  hitting D1 / D2 at the top of search results.
+
+### Customer-value validation (live RBA fetch, 2026-05-16)
+
+- Property analyst: `latest('D1', 'housing_credit_yoy')` → 7.3% (Mar 2026).
+- Bank credit analyst: `latest('D2', 'owner_occupier_housing_sa')` →
+  $1,731B, `latest('D2', 'investor_housing_sa')` → $842B (Mar 2026).
+- Macroeconomist: `latest('D1', 'business_credit_yoy')` → 9.9% (Mar 2026),
+  `latest('D1', 'broad_money_yoy')` → 8.3%.
+- Time-series query: `get_data('D1', 'business_credit_yoy', start_date='2024-01')`
+  returns 27 monthly observations spanning Jan 2024 → Mar 2026.
+
 ## [0.4.1] - 2026-05-16
 
 ### Fixed

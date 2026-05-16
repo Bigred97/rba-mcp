@@ -12,15 +12,19 @@ def reset():
     tables.reset_registry()
 
 
-def test_list_tables_returns_19():
+def test_list_tables_returns_21():
     summaries = tables.list_tables()
-    assert len(summaries) == 19
+    assert len(summaries) == 21
 
 
 def test_curated_tables_marked_curated():
     summaries = tables.list_tables()
     by_id = {s.id: s for s in summaries}
-    for cid in ("F1.1", "F2", "F2.1", "F4", "F5", "F6", "F7", "F8", "F11", "F11.1"):
+    for cid in (
+        "F1.1", "F2", "F2.1", "F4", "F5",
+        "F6", "F7", "F8", "F11", "F11.1",
+        "D1", "D2",
+    ):
         assert by_id[cid].is_curated, f"{cid} should be marked curated"
     assert not by_id["F3"].is_curated  # F3 (corporate bonds) is not curated
 
@@ -47,6 +51,11 @@ def test_get_csv_filename_unknown():
     ("term deposit", "F4"),
     ("savings", "F4"),
     ("trade weighted index", "F11"),
+    ("credit growth", "D1"),
+    ("housing credit growth", "D1"),
+    ("business credit growth", "D1"),
+    ("credit aggregates", "D2"),
+    ("total credit", "D2"),
 ])
 def test_search_finds_curated_at_top(query, expected_top_id):
     """Common AU-finance queries must hit the right curated F-table at #1 or #2."""

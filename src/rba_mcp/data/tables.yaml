@@ -100,3 +100,13 @@ tables:
     csv_filename: f17-data.csv
     frequency: Daily
     search_keywords: [zero coupon, yield curve, zero coupon rates, analytical series]
+  - id: D1
+    name: Growth in Selected Financial Aggregates
+    csv_filename: d1-data.csv
+    frequency: Monthly
+    search_keywords: [credit growth, credit aggregates, housing credit growth, business credit growth, broad money, m3, money supply, financial aggregates, mortgage credit growth, private sector credit growth, investor housing credit, owner occupier credit, personal credit]
+  - id: D2
+    name: Lending and Credit Aggregates
+    csv_filename: d2-data.csv
+    frequency: Monthly
+    search_keywords: [credit levels, lending aggregates, housing credit, business credit, total credit, mortgage stock, owner occupier housing, investor housing, bank loans, non bank financial institutions, nbfi, bills on issue, private sector credit]

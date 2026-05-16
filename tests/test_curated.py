@@ -10,10 +10,11 @@ def reset():
     curated.reset_registry()
 
 
-def test_list_ids_returns_ten():
+def test_list_ids_returns_twelve():
     assert set(curated.list_ids()) == {
         "F1.1", "F2", "F2.1", "F4", "F5",
         "F6", "F7", "F8", "F11", "F11.1",
+        "D1", "D2",
     }
 
 
@@ -24,6 +25,28 @@ def test_get_f11_loads_series():
     assert "aud_usd" in f11.series
     assert f11.series["aud_usd"].series_id == "FXRUSD"
     assert f11.search_keywords  # non-empty
+
+
+def test_get_d1_loads_growth_series():
+    d1 = curated.get("D1")
+    assert d1 is not None
+    assert d1.csv_filename == "d1-data.csv"
+    assert "housing_credit_yoy" in d1.series
+    assert d1.series["housing_credit_yoy"].series_id == "DGFACH12"
+    assert d1.series["total_credit_yoy"].series_id == "DGFAC12"
+
+
+def test_get_d2_loads_level_series():
+    d2 = curated.get("D2")
+    assert d2 is not None
+    assert d2.csv_filename == "d2-data.csv"
+    # Current RBA headline series — non-financial business credit
+    assert "business_credit_sa" in d2.series
+    assert d2.series["business_credit_sa"].series_id == "DLCACNFBS"
+    # Current RBA headline total credit (excl. financial businesses)
+    assert "total_credit_excl_financial_sa" in d2.series
+    assert d2.series["total_credit_excl_financial_sa"].series_id == "DLCACFS"
+    assert d2.series["business_credit_sa"].unit == "$ billion"
 
 
 def test_get_case_insensitive():

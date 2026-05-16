@@ -1,0 +1,114 @@
+id: D2
+name: Lending and Credit Aggregates — Monthly
+description: |
+  Monthly outstanding stock ($ billions) of private-sector lending and credit
+  by category: total credit (excluding financial businesses is the current
+  RBA headline), housing credit (owner-occupier and investor), business
+  credit (non-financial business is the current headline), personal credit,
+  plus loans and advances by intermediary type and bills on issue. Where D1
+  reports growth rates, D2 reports the underlying levels — the absolute
+  dollar stock that grew. Source: RBA Statistical Table D2.
+
+  Note: RBA redefined the credit aggregates in 2019. Series suffixed FB
+  ("excluding financial businesses") and NFB ("non-financial business") are
+  the current headline definitions; the legacy "total credit" and "business
+  credit" series were discontinued.
+update_frequency: monthly
+csv_filename: d2-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - credit aggregates
+  - lending aggregates
+  - total credit
+  - housing credit levels
+  - business credit levels
+  - mortgage stock
+  - owner occupier housing levels
+  - investor housing levels
+  - personal credit
+  - bank loans and advances
+  - non financial business credit
+  - bills on issue
+  - private sector credit levels
+  - rba d2
+series:
+  total_credit_excl_financial_sa:
+    series_id: DLCACFS
+    description: Total private-sector credit (excl. financial businesses) — seasonally adjusted, $ billions, includes securitisations (current RBA headline)
+    unit: $ billion
+  total_credit_excl_financial_orig:
+    series_id: DLCACFN
+    description: Total private-sector credit (excl. financial businesses) — original (not seasonally adjusted), $ billions, includes securitisations
+    unit: $ billion
+  total_credit_inc_select_financial_sa:
+    series_id: DLCACSFS
+    description: Total credit including select financial businesses — seasonally adjusted, $ billions (broader credit measure)
+    unit: $ billion
+  total_credit_inc_select_financial_orig:
+    series_id: DLCACSFN
+    description: Total credit including select financial businesses — original (not seasonally adjusted), $ billions
+    unit: $ billion
+  owner_occupier_housing_sa:
+    series_id: DLCACOHS
+    description: Owner-occupier housing credit — seasonally adjusted, $ billions
+    unit: $ billion
+  owner_occupier_housing_orig:
+    series_id: DLCACOHN
+    description: Owner-occupier housing credit — original (not seasonally adjusted), $ billions
+    unit: $ billion
+  investor_housing_sa:
+    series_id: DLCACIHS
+    description: Investor housing credit — seasonally adjusted, $ billions
+    unit: $ billion
+  investor_housing_orig:
+    series_id: DLCACIHN
+    description: Investor housing credit — original (not seasonally adjusted), $ billions
+    unit: $ billion
+  business_credit_sa:
+    series_id: DLCACNFBS
+    description: Non-financial business credit — seasonally adjusted, $ billions (current RBA headline definition)
+    unit: $ billion
+  business_credit_orig:
+    series_id: DLCACNFBN
+    description: Non-financial business credit — original (not seasonally adjusted), $ billions (current RBA headline definition)
+    unit: $ billion
+  business_credit_inc_select_financial_sa:
+    series_id: DLCACSFBS
+    description: Business credit including select financial businesses — seasonally adjusted, $ billions (broader business measure)
+    unit: $ billion
+  business_credit_inc_select_financial_orig:
+    series_id: DLCACSFBN
+    description: Business credit including select financial businesses — original (not seasonally adjusted), $ billions
+    unit: $ billion
+  other_personal_credit_sa:
+    series_id: DLCACOPS
+    description: Other personal credit (excl. housing) — seasonally adjusted, $ billions
+    unit: $ billion
+  other_personal_credit_orig:
+    series_id: DLCACOPN
+    description: Other personal credit (excl. housing) — original (not seasonally adjusted), $ billions
+    unit: $ billion
+  narrow_credit_excl_financial_sa:
+    series_id: DLCANCFS
+    description: Narrow credit (excl. financial businesses) — seasonally adjusted, $ billions (excludes securitisations)
+    unit: $ billion
+  loans_advances_banks_excl_financial:
+    series_id: DLCALAFB
+    description: Loans and advances by banks (excl. financial businesses), $ billions (excludes securitisations)
+    unit: $ billion
+  loans_advances_nbfis_excl_financial:
+    series_id: DLCALAFNBFI
+    description: Loans and advances by non-bank financial institutions (excl. financial businesses), $ billions
+    unit: $ billion
+  loans_advances_all_afis_excl_financial:
+    series_id: DLCALAFAFI
+    description: Loans and advances by all financial intermediaries (excl. financial businesses), $ billions
+    unit: $ billion
+  bills_on_issue_to_non_financial_business:
+    series_id: DLCANFBOI
+    description: Bills on issue to non-financial businesses, $ billions
+    unit: $ billion
+  lending_to_government:
+    series_id: DLCALGAFI
+    description: Lending to the government sector by all financial intermediaries, $ billions
+    unit: $ billion

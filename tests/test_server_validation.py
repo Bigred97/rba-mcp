@@ -92,10 +92,11 @@ async def test_get_data_lowercase_table_normalized():
         await server.get_data("f11", series="aud_atlantis")  # raises on unknown series, not table
 
 
-async def test_list_curated_returns_ten():
+async def test_list_curated_returns_twelve():
     assert set(server.list_curated()) == {
         "F1.1", "F2", "F2.1", "F4", "F5",
         "F6", "F7", "F8", "F11", "F11.1",
+        "D1", "D2",
     }
 
 

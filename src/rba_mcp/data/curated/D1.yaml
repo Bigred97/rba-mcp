@@ -1,0 +1,113 @@
+id: D1
+name: Growth in Selected Financial Aggregates — Monthly
+description: |
+  Monthly growth in private-sector credit and money aggregates: total credit,
+  housing credit (split owner-occupier / investor), business credit (non-
+  financial business is the current RBA headline definition), personal credit,
+  M3 and broad money. Each series is reported as both monthly and 12-month-
+  ended growth rates (per cent). Series are seasonally adjusted and include
+  securitisations. Source: RBA Statistical Table D1 — the most-cited macro
+  statistic after CPI for property and bank-credit commentary.
+
+  Note: RBA redefined "business credit" in 2019. The current headline series
+  is non-financial business credit (DGFACBNF*). The legacy "business" series
+  (DGFACB*) was discontinued.
+update_frequency: monthly
+csv_filename: d1-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+search_keywords:
+  - credit growth
+  - credit aggregates
+  - housing credit growth
+  - business credit growth
+  - personal credit
+  - investor housing credit
+  - owner occupier housing credit
+  - mortgage credit growth
+  - private sector credit
+  - broad money
+  - m3
+  - money supply
+  - financial aggregates
+  - rba d1
+series:
+  total_credit_excl_financial_monthly:
+    series_id: DGFACNFM
+    description: Total private-sector credit (excl. financial businesses) — monthly growth (%), seasonally adjusted, includes securitisations
+    unit: Per cent
+  total_credit_excl_financial_yoy:
+    series_id: DGFACNF12
+    description: Total private-sector credit (excl. financial businesses) — 12-month-ended growth (%), seasonally adjusted, includes securitisations
+    unit: Per cent
+  total_credit_monthly:
+    series_id: DGFACM
+    description: Total private-sector credit — monthly growth (%), seasonally adjusted (legacy headline; superseded by total_credit_excl_financial in 2019)
+    unit: Per cent
+  total_credit_yoy:
+    series_id: DGFAC12
+    description: Total private-sector credit — 12-month-ended growth (%), seasonally adjusted (legacy headline; superseded by total_credit_excl_financial in 2019)
+    unit: Per cent
+  housing_credit_monthly:
+    series_id: DGFACHM
+    description: Housing credit — monthly growth (%), seasonally adjusted, includes securitisations
+    unit: Per cent
+  housing_credit_yoy:
+    series_id: DGFACH12
+    description: Housing credit — 12-month-ended growth (%), seasonally adjusted, includes securitisations
+    unit: Per cent
+  owner_occupier_housing_monthly:
+    series_id: DGFACOHM
+    description: Owner-occupier housing credit — monthly growth (%), seasonally adjusted
+    unit: Per cent
+  owner_occupier_housing_yoy:
+    series_id: DGFACOH12
+    description: Owner-occupier housing credit — 12-month-ended growth (%), seasonally adjusted
+    unit: Per cent
+  investor_housing_monthly:
+    series_id: DGFACIHM
+    description: Investor housing credit — monthly growth (%), seasonally adjusted
+    unit: Per cent
+  investor_housing_yoy:
+    series_id: DGFACIH12
+    description: Investor housing credit — 12-month-ended growth (%), seasonally adjusted
+    unit: Per cent
+  business_credit_monthly:
+    series_id: DGFACBNFM
+    description: Non-financial business credit — monthly growth (%), seasonally adjusted (current RBA headline definition)
+    unit: Per cent
+  business_credit_yoy:
+    series_id: DGFACBNF12
+    description: Non-financial business credit — 12-month-ended growth (%), seasonally adjusted (current RBA headline definition)
+    unit: Per cent
+  business_credit_inc_select_financial_monthly:
+    series_id: DGFACBNWM
+    description: Business credit including select financial businesses — monthly growth (%), seasonally adjusted (broader business measure)
+    unit: Per cent
+  business_credit_inc_select_financial_yoy:
+    series_id: DGFACBNW12
+    description: Business credit including select financial businesses — 12-month-ended growth (%), seasonally adjusted (broader business measure)
+    unit: Per cent
+  other_personal_credit_monthly:
+    series_id: DGFACOPM
+    description: Other personal credit (excl. housing) — monthly growth (%), seasonally adjusted
+    unit: Per cent
+  other_personal_credit_yoy:
+    series_id: DGFACOP12
+    description: Other personal credit (excl. housing) — 12-month-ended growth (%), seasonally adjusted
+    unit: Per cent
+  m3_monthly:
+    series_id: DGFAM3M
+    description: M3 money aggregate — monthly growth (%), seasonally adjusted
+    unit: Per cent
+  m3_yoy:
+    series_id: DGFAM312
+    description: M3 money aggregate — 12-month-ended growth (%), seasonally adjusted
+    unit: Per cent
+  broad_money_monthly:
+    series_id: DGFABMM
+    description: Broad money — monthly growth (%), seasonally adjusted
+    unit: Per cent
+  broad_money_yoy:
+    series_id: DGFABM12
+    description: Broad money — 12-month-ended growth (%), seasonally adjusted
+    unit: Per cent
