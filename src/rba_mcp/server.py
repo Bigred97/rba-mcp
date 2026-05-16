@@ -286,7 +286,7 @@ async def describe_table(
         Field(
             description=(
                 "RBA F-table ID like 'F1.1', 'F11', 'F6'. Use search_tables() "
-                "to discover or list_curated() to enumerate the 5 plain-English "
+                "to discover or list_curated() to enumerate the 15 plain-English "
                 "tables. Case-insensitive ('f11' resolves to 'F11')."
             ),
             examples=["F1.1", "F4", "F6", "F11", "F11.1"],
@@ -322,10 +322,12 @@ async def describe_table(
     table_id = _normalize_table_id(table_id)
     summary = tables.get_table(table_id)
     if summary is None:
+        curated_ids = sorted(curated.list_ids())
         raise ValueError(
             f"Table {table_id!r} is not a known RBA F-table. "
-            "Known IDs follow the F/D/C/G/E + digits pattern (e.g. 'F11', "
-            "'F1.1', 'F6', 'D1', 'C1')."
+            f"All {len(curated_ids)} curated IDs: {curated_ids}. "
+            f"Search by keyword or enumerate the curated set to discover IDs. "
+            f"Known IDs follow the F/D/C/G/E + digits pattern (e.g. 'F11', 'F1.1', 'F6', 'D1', 'C1')."
         )
 
     csv_filename = tables.get_csv_filename(table_id)
@@ -503,10 +505,12 @@ async def _get_data_impl(
 
     summary = tables.get_table(table_id)
     if summary is None:
+        curated_ids = sorted(curated.list_ids())
         raise ValueError(
             f"Table {table_id!r} is not a known RBA F-table. "
-            "Known IDs follow the F/D/C/G/E + digits pattern (e.g. 'F11', "
-            "'F1.1', 'F6', 'D1', 'C1')."
+            f"All {len(curated_ids)} curated IDs: {curated_ids}. "
+            f"Search by keyword or enumerate the curated set to discover IDs. "
+            f"Known IDs follow the F/D/C/G/E + digits pattern (e.g. 'F11', 'F1.1', 'F6', 'D1', 'C1')."
         )
     csv_filename = tables.get_csv_filename(table_id)
     if csv_filename is None:

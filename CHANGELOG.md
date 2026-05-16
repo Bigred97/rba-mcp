@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.5] - 2026-05-17
+
+### Improved — F-table-not-found error message lists curated IDs
+
+When `get_data(table_id='F999')` or `describe_table(table_id='F999')` is called with an unknown F-table ID, the ValueError now includes the full list of 15 curated table IDs and suggests "search by keyword or enumerate the curated set" — transport-agnostic, per the rba-specific convention enforced by `test_no_mcp_tool_refs_in_error_strings`. Previously the error described only the F/D/C/G/E + digits pattern, leaving customers to discover the curated set elsewhere.
+
+Brings rba-mcp to portfolio parity with the 8 other sisters on "Deterministic Error Handling" (Try X / Did you mean / Valid options). Two new regressions in `test_server_validation.py` (`test_describe_table_unknown_table_lists_curated_ids`, `test_get_data_unknown_table_lists_curated_ids`) lock in the new shape. Tests 163/163.
+
 ## [0.7.4] - 2026-05-16
 
 ### Added — `test_resilience.py` perf-budget regressions

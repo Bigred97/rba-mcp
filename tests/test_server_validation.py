@@ -34,6 +34,43 @@ async def test_describe_table_unknown_table_raises():
         await server.describe_table("F999")
 
 
+async def test_describe_table_unknown_table_lists_curated_ids():
+    """0.7.5: unknown table_id error must NAME the bad value, LIST the curated
+    IDs in full, and suggest an action — matching the portfolio's quality
+    dimension #5 (Deterministic Error Handling).
+
+    Action phrasing is intentionally transport-agnostic per 0.7.3 — no MCP
+    tool names like `search_tables(...)` (the bare-string ban is enforced by
+    test_no_mcp_tool_refs_in_error_strings below).
+    """
+    with pytest.raises(ValueError) as exc_info:
+        await server.describe_table("F999")
+    msg = str(exc_info.value)
+    # Names the rejected value
+    assert "'F999'" in msg, f"missing bad-value name: {msg!r}"
+    # Lists curated IDs verbatim — spot-check several
+    for sample_id in ["F1.1", "F11", "C1", "D1", "E2", "G3"]:
+        assert sample_id in msg, f"missing curated ID {sample_id!r}: {msg!r}"
+    # Carries an actionable hint
+    assert ("Search" in msg or "search" in msg) and "enumerate" in msg, (
+        f"missing actionable hint: {msg!r}"
+    )
+
+
+async def test_get_data_unknown_table_lists_curated_ids():
+    """Same shape as describe_table — the get_data path must surface the
+    curated ID list + action hint, not just the F/D/C/G/E pattern."""
+    with pytest.raises(ValueError) as exc_info:
+        await server.get_data(table_id="F999")
+    msg = str(exc_info.value)
+    assert "'F999'" in msg, f"missing bad-value name: {msg!r}"
+    for sample_id in ["F1.1", "F11", "C1", "D1", "E2", "G3"]:
+        assert sample_id in msg, f"missing curated ID {sample_id!r}: {msg!r}"
+    assert ("Search" in msg or "search" in msg) and "enumerate" in msg, (
+        f"missing actionable hint: {msg!r}"
+    )
+
+
 async def test_describe_table_garbage_id_rejected():
     with pytest.raises(ValueError, match="invalid characters"):
         await server.describe_table("F11; DROP TABLE")
