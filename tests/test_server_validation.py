@@ -1,4 +1,8 @@
 """Server-side input validation guards (offline — no network calls)."""
+import ast
+import pathlib
+import re
+
 import pytest
 
 from rba_mcp import server
@@ -81,7 +85,7 @@ async def test_get_data_unknown_curated_series():
 
 async def test_get_data_non_curated_requires_series():
     """A non-curated table requires explicit series — no defaulting."""
-    with pytest.raises(ValueError, match="must specify which series"):
+    with pytest.raises(ValueError, match="must specify which raw"):
         await server.get_data("F3")  # F3 (corporate bond yields) is not curated
 
 
@@ -136,18 +140,29 @@ async def test_latest_registry_inconsistency_raises_value_error(monkeypatch):
 
 async def test_unknown_curated_series_suggests_did_you_mean():
     """Typo'd curated series key should surface a difflib 'Did you mean?' hint
-    AND a describe_table() pointer — the CLAUDE.md textbook shape."""
+    AND a list of valid keys — the CLAUDE.md textbook shape.
+
+    The hint is intentionally transport-agnostic (no MCP-tool name like
+    `describe_table()`) so it's usable whether the caller is an MCP client,
+    a REST gateway, or a script. (0.7.3 — Item 3.)
+    """
     with pytest.raises(ValueError) as exc_info:
         # 'aud_us' is one char off from 'aud_usd' — difflib should match.
         await server.get_data("F11", series="aud_us")
     msg = str(exc_info.value)
     assert "Did you mean 'aud_usd'" in msg, f"missing did-you-mean: {msg!r}"
-    assert "describe_table('F11')" in msg, f"missing describe_table pointer: {msg!r}"
+    assert "Valid keys:" in msg, f"missing valid-keys list: {msg!r}"
+    # The hint must NOT reference an MCP tool name — it should work for
+    # callers behind any transport.
+    assert "describe_table" not in msg, f"hint still references MCP tool: {msg!r}"
 
 
 async def test_invalid_series_id_shape_carries_actionable_hint():
-    """Raw series IDs with invalid chars must hint at shape, a likely correction,
-    and which describe_table call to try — the CLAUDE.md example verbatim."""
+    """Raw series IDs with invalid chars must hint at shape and surface a
+    likely correction — no MCP-tool reference required.
+
+    (0.7.3 — Item 3: hints must be transport-agnostic.)
+    """
     # Force the non-curated path: a syntactically-invalid raw ID can't be a
     # curated key, so translate_series falls through to the raw-ID branch.
     # We bypass the curated wrapper by monkey-patching curated.get to None for
@@ -160,7 +175,9 @@ async def test_invalid_series_id_shape_carries_actionable_hint():
             await server.get_data("F11", series="fx rusd")
     msg = str(exc_info.value)
     assert "invalid characters" in msg, f"missing shape hint: {msg!r}"
-    assert "describe_table" in msg, f"missing describe_table pointer: {msg!r}"
+    # Difflib should suggest 'FXRUSD' for 'fx rusd'.
+    assert "FXRUSD" in msg, f"missing did-you-mean suggestion: {msg!r}"
+    assert "describe_table" not in msg, f"hint still references MCP tool: {msg!r}"
 
 
 # ----- Wave 4: start_period / end_period portfolio alias --------------------
@@ -232,3 +249,96 @@ async def test_start_period_end_period_swap_error_uses_legacy_field_name():
             "F11", series="aud_usd",
             start_period="2025", end_period="2020",
         )
+
+
+# ----- 0.7.3 (Item 3): user-facing error hints are transport-agnostic -----
+#
+# Error messages must not reference MCP-tool names (e.g. `describe_table()`,
+# `search_tables()`) or internal API URLs (`www.rba.gov.au/.../csv/...csv`).
+# An error from the rba_mcp package should read the same whether the caller
+# is an MCP client, a REST gateway, or a Python script calling the functions
+# directly.
+
+_SRC_ROOT = pathlib.Path(__file__).resolve().parent.parent / "src" / "rba_mcp"
+
+
+def _extract_user_facing_strings() -> list[tuple[pathlib.Path, int, str]]:
+    """Walk every .py under src/rba_mcp/, parse the AST, and yield only the
+    string arguments to `raise <SomeExc>(...)` calls — these are the strings
+    users actually see in error reports.
+
+    Skips: docstrings, Field(description=..., examples=...), comments,
+    return values. Just rejection-path messages.
+    """
+    out: list[tuple[pathlib.Path, int, str]] = []
+    for py in _SRC_ROOT.rglob("*.py"):
+        tree = ast.parse(py.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Raise) or node.exc is None:
+                continue
+            call = node.exc if isinstance(node.exc, ast.Call) else None
+            if call is None:
+                continue
+            for arg in call.args:
+                # We support both Constant strings and JoinedStr (f-strings)
+                # by reducing each to a "literal parts only" string.
+                pieces: list[str] = []
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                    pieces.append(arg.value)
+                elif isinstance(arg, ast.JoinedStr):
+                    for v in arg.values:
+                        if isinstance(v, ast.Constant) and isinstance(v.value, str):
+                            pieces.append(v.value)
+                elif isinstance(arg, ast.BinOp):
+                    # Concatenated strings like "foo" + ", bar" — walk
+                    # the binop tree for any Constant string leaves.
+                    stack: list[ast.AST] = [arg]
+                    while stack:
+                        cur = stack.pop()
+                        if isinstance(cur, ast.Constant) and isinstance(cur.value, str):
+                            pieces.append(cur.value)
+                        elif isinstance(cur, ast.BinOp):
+                            stack.append(cur.left)
+                            stack.append(cur.right)
+                        elif isinstance(cur, ast.JoinedStr):
+                            for v in cur.values:
+                                stack.append(v)
+                if pieces:
+                    out.append((py, node.lineno, "".join(pieces)))
+    return out
+
+
+def test_no_mcp_tool_refs_in_error_strings():
+    """Item 3 acceptance: no error message references an MCP tool by name
+    (`describe_table(...)`, `search_tables(...)`, `list_curated(...)`).
+    The hint must suggest what to do (look up valid keys, retry, etc.)
+    without naming a specific transport's API surface.
+    """
+    pat = re.compile(r"\b(describe_table|search_tables|list_curated)\s*\(")
+    offenders: list[str] = []
+    for path, lineno, text in _extract_user_facing_strings():
+        if pat.search(text):
+            offenders.append(f"{path.relative_to(_SRC_ROOT.parent.parent)}:{lineno}: {text!r}")
+    assert not offenders, (
+        "User-facing error messages reference MCP tool names — "
+        "these are transport-specific and shouldn't leak through ValueError. "
+        "Replace with transport-agnostic hints (e.g. 'See the valid-series list "
+        f"for X').\n  {chr(10).join(offenders)}"
+    )
+
+
+def test_no_internal_csv_urls_in_error_strings():
+    """Item 3 acceptance: no error message embeds the internal RBA CDN URL
+    or CSV-filename — those are implementation details, not actionable
+    customer-facing information.
+    """
+    bad = re.compile(r"(www\.rba\.gov\.au|\.rba\.gov\.au/[a-z]|\b[a-z0-9.]+-data\.csv\b)")
+    offenders: list[str] = []
+    for path, lineno, text in _extract_user_facing_strings():
+        if bad.search(text):
+            offenders.append(f"{path.relative_to(_SRC_ROOT.parent.parent)}:{lineno}: {text!r}")
+    assert not offenders, (
+        "User-facing error messages embed internal RBA CDN URLs or CSV "
+        "filenames. Strip them — these are implementation details that "
+        "don't help the caller.\n  " + "\n  ".join(offenders)
+    )

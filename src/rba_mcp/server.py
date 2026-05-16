@@ -71,18 +71,17 @@ def _normalize_table_id(table_id: Any) -> str:
     if not isinstance(table_id, str):
         raise ValueError(
             f"table_id must be a string, got {type(table_id).__name__}. "
-            "Try search_tables() to discover IDs like 'F11', 'F1.1', or 'F6'."
+            "F-table IDs look like 'F11', 'F1.1', or 'F6'."
         )
     normalized = table_id.strip().upper()
     if not normalized:
         raise ValueError(
-            "table_id is empty. Try search_tables() to discover IDs like 'F11', 'F1.1', or 'F6'."
+            "table_id is empty. F-table IDs look like 'F11', 'F1.1', or 'F6'."
         )
     if not _TABLE_ID_PATTERN.match(normalized):
         raise ValueError(
             f"table_id {table_id!r} contains invalid characters — "
-            "F-table IDs use uppercase letters, digits, and dots (e.g. 'F11', 'F1.1'). "
-            "Try search_tables() to discover valid IDs."
+            "F-table IDs use uppercase letters, digits, and dots (e.g. 'F11', 'F1.1')."
         )
     return normalized
 
@@ -110,24 +109,21 @@ def _validate_series(series: Any) -> str | list[str] | None:
                 raise ValueError(
                     f"series list entries must be strings, got {type(s).__name__}. "
                     "Each entry should be a curated key (e.g. 'aud_usd') or a raw RBA "
-                    "series ID (e.g. 'FXRUSD'). "
-                    "Try describe_table('F11.1') to see valid keys for a curated table."
+                    "series ID (e.g. 'FXRUSD')."
                 )
             stripped = s.strip()
             if not stripped:
                 raise ValueError(
                     "series list contains an empty string. "
                     "Each entry should be a non-empty curated key like 'aud_usd' or a "
-                    "raw RBA series ID like 'FXRUSD'. "
-                    "Try describe_table('<table_id>') to list valid series."
+                    "raw RBA series ID like 'FXRUSD'."
                 )
             out.append(stripped)
         return out
     raise ValueError(
         f"series must be a string or list of strings, got {type(series).__name__}. "
         "Pass a single key (e.g. 'aud_usd'), a list of keys "
-        "(e.g. ['aud_usd', 'aud_eur']), or omit to use the table's headline series. "
-        "See describe_table('<table_id>') for valid keys."
+        "(e.g. ['aud_usd', 'aud_eur']), or omit to use the table's headline series."
     )
 
 
@@ -210,10 +206,6 @@ def _validate_series_for_url(series_ids: list[str]) -> None:
                     hint += f" Did you mean '{close[0]}'?"
             except Exception:
                 pass
-            hint += (
-                " Try describe_table('F11.1') (FX) or describe_table('F1.1') "
-                "(money market) to see valid series IDs for a table."
-            )
             raise ValueError(hint)
 
 
@@ -332,7 +324,8 @@ async def describe_table(
     if summary is None:
         raise ValueError(
             f"Table {table_id!r} is not a known RBA F-table. "
-            "Try search_tables() to discover valid IDs (e.g. 'F11', 'F1.1', 'F6')."
+            "Known IDs follow the F/D/C/G/E + digits pattern (e.g. 'F11', "
+            "'F1.1', 'F6', 'D1', 'C1')."
         )
 
     csv_filename = tables.get_csv_filename(table_id)
@@ -355,11 +348,9 @@ async def describe_table(
             body = await client.fetch_table_csv(csv_filename)
         except RBAAPIError as e:
             raise ValueError(
-                f"Could not fetch RBA table {table_id} ({csv_filename}) from "
-                f"www.rba.gov.au. ({e}) "
+                f"Could not fetch RBA table {table_id} from the source. ({e}) "
                 "Try again in a moment — the RBA CDN occasionally rate-limits. "
-                f"Confirm the table is published at {rba_url} or try "
-                "list_curated() for a known-good table ID."
+                "If the failure persists, the table ID may have been retired upstream."
             ) from e
         _, df = parse_csv(body)
 
@@ -395,11 +386,9 @@ async def describe_table(
             body = await client.fetch_table_csv(csv_filename)
         except RBAAPIError as e:
             raise ValueError(
-                f"Could not fetch RBA table {table_id} ({csv_filename}) from "
-                f"www.rba.gov.au. ({e}) "
+                f"Could not fetch RBA table {table_id} from the source. ({e}) "
                 "Try again in a moment — the RBA CDN occasionally rate-limits. "
-                f"Confirm the table is published at {rba_url} or try "
-                "list_curated() for a known-good curated table ID."
+                "If the failure persists, the table ID may have been retired upstream."
             ) from e
         header, df = parse_csv(body)
         series_list = []
@@ -516,7 +505,8 @@ async def _get_data_impl(
     if summary is None:
         raise ValueError(
             f"Table {table_id!r} is not a known RBA F-table. "
-            "Try search_tables() to discover valid IDs."
+            "Known IDs follow the F/D/C/G/E + digits pattern (e.g. 'F11', "
+            "'F1.1', 'F6', 'D1', 'C1')."
         )
     csv_filename = tables.get_csv_filename(table_id)
     if csv_filename is None:
@@ -545,8 +535,9 @@ async def _get_data_impl(
         # Non-curated: only raw IDs accepted; no defaulting.
         if series_validated is None:
             raise ValueError(
-                f"Table {table_id} is not curated; you must specify which series. "
-                "Call describe_table() first to see the available raw RBA series IDs."
+                f"Table {table_id} is not curated; you must specify which raw "
+                "RBA series IDs to fetch. Inspect the table's series list "
+                "first to get valid IDs."
             )
         series_ids = (
             [series_validated]
@@ -571,11 +562,9 @@ async def _get_data_impl(
         body = await client.fetch_table_csv(csv_filename, kind=cache_kind)
     except RBAAPIError as e:
         raise ValueError(
-            f"Could not fetch RBA table {table_id} ({csv_filename}) from "
-            f"www.rba.gov.au. ({e}) "
+            f"Could not fetch RBA table {table_id} from the source. ({e}) "
             "Try again in a moment — the RBA CDN occasionally rate-limits. "
-            f"Confirm the table is published at {rba_url} or try "
-            "list_curated() for a known-good curated table ID."
+            "If the failure persists, the table ID may have been retired upstream."
         ) from e
 
     header, df = parse_csv(body)
@@ -590,8 +579,7 @@ async def _get_data_impl(
             hint = ", ".join(valid[:10]) + ("..." if len(valid) > 10 else "")
             raise ValueError(
                 f"Unknown series {unknown} for non-curated table '{table_id}'. "
-                f"Valid series IDs from the CSV header: {hint}. "
-                f"Call describe_table('{table_id}') to see the full list."
+                f"Valid series IDs for this table: {hint}."
             )
 
     df = filter_by_series(df, series_ids)

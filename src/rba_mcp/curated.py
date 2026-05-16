@@ -178,7 +178,7 @@ def translate_series(
                 f"Empty series value for table '{curated.id}'. "
                 f"Try one of: {', '.join(valid_keys[:10])}"
                 + ("..." if len(valid_keys) > 10 else "")
-                + f". Or call describe_table('{curated.id}') to see the full list."
+                + "."
             )
         if v_str in curated.series:
             out.append(curated.series[v_str].series_id)
@@ -201,7 +201,6 @@ def translate_series(
                 f"Unknown series '{v}' for table '{curated.id}'.{did_you_mean} "
                 f"Valid keys: {', '.join(valid_keys[:10])}"
                 + ("..." if len(valid_keys) > 10 else "")
-                + f". Try describe_table('{curated.id}') to see the full list, "
-                "or pass a raw RBA series ID directly."
+                + ". Raw RBA series IDs (e.g. 'FXRUSD') are also accepted."
             )
     return out

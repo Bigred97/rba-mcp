@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.7.3] - 2026-05-16
+
+### Fixed — `ValueError` hints are now transport-agnostic
+
+- Stripped MCP-tool name references (`Try describe_table('F11')`,
+  `Try search_tables()`, `Call list_curated()`) and internal RBA CDN URLs
+  / CSV filenames from every user-facing error message in `server.py` and
+  `curated.py`. Reasoning: when this server is fronted by a REST gateway
+  or called from a generic script, an error suggesting a "describe_table"
+  tool that doesn't exist in that transport is worse than no hint at all.
+- The corrections still suggest *what* to look up (valid keys, retry,
+  series-ID shape) without naming a specific transport's API surface.
+- Internal RBA CSV-filename leakage in upstream-fetch errors removed —
+  callers don't need to see `f11.1-data.csv` to recover from a 503; the
+  table ID alone suffices.
+- Added two AST-based regressions in `test_server_validation.py` that
+  walk every `raise <Exc>(...)` in `src/rba_mcp/` and assert no message
+  references `describe_table(`, `search_tables(`, `list_curated(`, an
+  `*-data.csv` filename, or an `rba.gov.au/...` API URL. This prevents
+  regressions in future error-message edits.
+
+### Tests
+
+- 156 unit tests passing (was 154). 10× zero-flake gauntlet.
+
 ## [0.7.2] - 2026-05-16
 
 ### Fixed — `latest()` / `get_data()` no-series default returns headline only
