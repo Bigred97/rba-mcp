@@ -4,6 +4,11 @@ description: |
   Monthly money-market rates including the RBA Cash Rate Target (the headline
   policy rate), interbank cash rate, bank-accepted bills, OIS rates, and
   Treasury notes. Source: Reserve Bank of Australia, Statistical Table F1.1.
+
+  **For the CURRENT cash rate use F1 (daily) — not F1.1.** F1.1 publishes
+  month-end values only, so it can lag the live cash rate by up to a
+  month after an RBA Board rate change (e.g. F1.1's 2026-04-30 row
+  shows 4.10% even though the rate moved to 4.35% on 2026-05-06).
 update_frequency: monthly
 csv_filename: f1.1-data.csv
 source_url: https://www.rba.gov.au/statistics/tables/

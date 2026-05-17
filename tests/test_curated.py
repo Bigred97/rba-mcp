@@ -10,9 +10,11 @@ def reset():
     curated.reset_registry()
 
 
-def test_list_ids_returns_fifteen():
+def test_list_ids_returns_sixteen():
+    # F1 (daily) added in 0.8.5 so customers asking for "current cash rate"
+    # get the freshest daily value, not F1.1's month-end snapshot.
     assert set(curated.list_ids()) == {
-        "F1.1", "F2", "F2.1", "F4", "F5",
+        "F1", "F1.1", "F2", "F2.1", "F4", "F5",
         "F6", "F7", "F8", "F11", "F11.1",
         "D1", "D2", "C1", "G3", "E2",
     }

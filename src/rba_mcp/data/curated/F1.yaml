@@ -1,0 +1,61 @@
+id: F1
+name: Money Market — Daily (RBA Cash Rate Target, latest)
+description: |
+  Daily money-market rates including the RBA Cash Rate Target — updated
+  every business day. Use this table when you want the CURRENT cash rate
+  (which can change on RBA Board decision days, most recently 2026-05-06
+  to 4.35%). F1.1 (Monthly) carries the same series but reflects
+  month-end values only; if you want the rate AS OF TODAY, use F1.
+
+  Source: Reserve Bank of Australia, Statistical Table F1.
+update_frequency: daily
+csv_filename: f1-data.csv
+source_url: https://www.rba.gov.au/statistics/tables/
+# Default returned when caller omits `series`. F1 carries cash-rate-target,
+# interbank, and trading volumes; cash_rate_target is the headline.
+headline_series: cash_rate_target
+search_keywords:
+  - cash rate
+  - cash rate target
+  - current cash rate
+  - latest cash rate
+  - rba rate today
+  - daily cash rate
+  - monetary policy
+  - interest rates today
+  - ocr
+  - rba board decision
+  - cash rate change
+series:
+  cash_rate_target:
+    series_id: FIRMMCRTD
+    description: RBA Cash Rate Target (daily) — the headline monetary-policy rate
+    unit: Per cent per annum
+  cash_rate_target_change:
+    series_id: FIRMMCCRT
+    description: Change in the Cash Rate Target on the day of an RBA Board decision
+    unit: Per cent per annum
+  interbank_cash_rate:
+    series_id: FIRMMCRID
+    description: Interbank Overnight Cash Rate (actual realised, daily)
+    unit: Per cent per annum
+  interbank_cash_rate_high:
+    series_id: FIRMMCRIH
+    description: Highest Interbank Overnight Cash Rate for the day
+    unit: Per cent per annum
+  interbank_cash_rate_low:
+    series_id: FIRMMCRIL
+    description: Lowest Interbank Overnight Cash Rate for the day
+    unit: Per cent per annum
+  cash_market_volume:
+    series_id: FIRMMCRIV
+    description: Volume of Cash Market Transactions for the day
+    unit: AUD billion
+  cash_market_count:
+    series_id: FIRMMCRIN
+    description: Number of Cash Market Transactions for the day
+    unit: Count
+  total_return_index:
+    series_id: FIRMMCTRI
+    description: Total Return Index — cumulative reinvestment of the cash rate
+    unit: Index

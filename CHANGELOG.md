@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.8.5] - 2026-05-18
+
+### Added — F1 (Daily Cash Rate) curated
+
+Customer-sim reported `rba.F1.1.latest()` returning 4.10% (the
+2026-04-30 month-end) when the actual current cash rate is 4.35%
+(set 2026-05-06). F1.1 publishes month-end snapshots only — between
+RBA Board decisions and the next month-end, F1.1 lags the live cash
+rate. Composers reading "the current cash rate" from F1.1 get stale
+data for up to a month after each rate change.
+
+Added F1 as a curated table. F1 is the DAILY money-market table —
+its `cash_rate_target` series carries the RBA cash rate as of every
+business day. `rba.F1.latest()` now returns the most recent daily
+value (currently 4.35% @ 2026-05-14).
+
+  ┌─────────┬─────────┬────────┬───────────────────────────────────┐
+  │ Table   │ Cadence │ Latest │ Use case                          │
+  ├─────────┼─────────┼────────┼───────────────────────────────────┤
+  │ F1      │ Daily   │ 4.35%  │ Current cash rate, RBA Board step │
+  │ F1.1    │ Monthly │ 4.10%  │ Month-end snapshots, time series  │
+  └─────────┴─────────┴────────┴───────────────────────────────────┘
+
+Updated F1.1's curated description to explicitly point customers
+asking for the "current cash rate" at F1 instead. Search ranking
+returns both F1 and F1.1 at relevance 100 for "cash rate" queries;
+F1 is listed first.
+
+184 unit tests pass.
+
 ## [0.8.4] - 2026-05-18
 
 ### Fixed — CI lint failures (unused imports in tables.py + release_calendar.py)
