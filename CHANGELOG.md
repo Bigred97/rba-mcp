@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.8.2] - 2026-05-18
+
+### Improved — search ranker no longer pushes wrong tables to rel=99
+
+Customer-sim reported `rba.C1` (Credit Card Statistics) winning "cash
+rate history" queries at rel=99. Root cause: the WRatio + curated
+bonus ranker fuzzy-matched any substring overlap, so 'cash' (in C1's
+description: "cash advances") + curated bonus pushed unrelated tables
+to the top.
+
+Replaced with a two-pool design + stopword filter + token coverage:
+
+- High-signal: `token_set_ratio` over `id + name + description`. The
+  description folds in curated YAML keywords + series descriptions so
+  F1.1's keywords ('cash rate', 'cash rate target') participate
+  alongside its short name 'Money Market — Monthly'.
+- Stopword filter on the query: removes generic terms ('history',
+  'monthly', 'australia', 'rba', etc.) before token-matching. Without
+  this, 'cash rate history' lost to F11 'Exchange Rates – Monthly
+  History' because 'history' is the strongest literal overlap.
+- Token coverage bonus: rewards datasets whose haystack contains MORE
+  distinct non-stopword query tokens. 'cash rate' → F1.1 (both tokens
+  in keywords) beats F11 (only 'rate' matches).
+- Curated + phrase bonuses gated on HIGH_SIGNAL_GATE=40 so weak fuzzy
+  matches don't get artificially elevated.
+
+Live verification:
+- 'cash rate history' → F1, F1.1, F4 top (was C1, F2.1, etc.)
+- 'credit card spending' → C1 top
+- 'fx rates' → F11, F11.1 top
+- 'inflation expectations' → G3 top
+
+184 tests pass.
+
 ## [0.8.1] - 2026-05-18
 
 ### Added — `TableSummary.relevance` populated by `search_tables()`

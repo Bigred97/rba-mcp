@@ -102,44 +102,92 @@ def get_csv_filename(table_id: str) -> str | None:
 def search_in_memory(
     summaries: list[TableSummary], query: str, limit: int = 10
 ) -> list[TableSummary]:
-    """Fuzzy search with curated +25 boost."""
+    """Two-pool ranker for F-table search.
+
+    High-signal pool: id + name (token_set_ratio). Token-strict, so a
+    query like 'cash rate history' doesn't fuzzy-match C1 (Credit Card
+    Statistics) just because 'cash' is a substring of 'cash advances'
+    in C1's description.
+
+    Description pool: capped WRatio. Curated tables get a small
+    CURATED_BONUS only when the high-signal pool also has a non-trivial
+    match — gates the bonus so over-broad curated boosts don't flood
+    unrelated queries with rel=99 ties.
+
+    Phrase-match bonus when the full query appears as a substring of
+    id+name (the focused haystack, not description).
+    """
     if not query.strip():
         raise ValueError(
             "query is required. Try 'cash rate', 'mortgage', 'aud usd', "
             "'inflation', 'deposit rates', or any other RBA topic."
         )
-    haystack = {
-        i: f"{s.id} {s.name} {s.description or ''}" for i, s in enumerate(summaries)
-    }
-    pool_size = max(limit * 4, 30)
-    matches = process.extract(query, haystack, scorer=fuzz.WRatio, limit=pool_size)
-    # Curated tables get a meaningful boost so they outrank substring-matching
-    # non-curated (e.g. "exchange rate" matches F12 "US Dollar Exchange Rates"
-    # at 85.5; F11.1 needs the +30 to clear that gap on common queries).
-    CURATED_BONUS = 30
-    # Phrase-match bonus: if the full query phrase appears as a substring in
-    # the haystack entry, give a +20 boost. Lets strong non-curated matches
-    # (e.g. "yield curve" → F2/F2.1) compete with the curated bonus when a
-    # query is highly specific to a non-curated table. Curated tables that
-    # also phrase-match get both bonuses, so common queries still route
-    # correctly. (0.1.9 addition.)
-    PHRASE_BONUS = 20
+    DESCRIPTION_CAP = 30
+    CURATED_BONUS = 20
+    PHRASE_BONUS = 15
+    HIGH_SIGNAL_GATE = 40
+    # Per-token coverage matters more than fuzzy similarity. A query
+    # like 'cash rate history' loses to F11 if we go on token_set_ratio
+    # alone because F11's 'exchange rate history' partially overlaps;
+    # but F1.1 is the ONLY table whose description contains 'cash' as a
+    # token. Reward coverage of distinct query tokens across the
+    # full haystack (name + description + keywords).
+    TOKEN_COVERAGE_WEIGHT = 35  # per query token, max contribution
+    # Stopwords filtered from the query before token-coverage scoring —
+    # generic terms that appear in nearly every dataset's haystack.
+    STOPWORDS = frozenset({
+        "australia", "australian", "data", "statistics", "stats",
+        "the", "and", "of", "by", "in", "on", "for", "to", "a", "an",
+        "with", "from", "annual", "monthly", "quarterly", "daily",
+        "history", "table", "rba", "current",
+    })
+
     q_lower = query.strip().lower()
-    rescored = []
-    for _hay, score, idx in matches:
-        bonus = CURATED_BONUS if summaries[idx].is_curated else 0
-        haystack_lower = haystack[idx].lower()
-        if q_lower and q_lower in haystack_lower:
-            bonus += PHRASE_BONUS
-        rescored.append((score + bonus, score, idx))
-    rescored.sort(key=lambda t: (-t[0], -t[1]))
-    # Attach the adjusted score (with curated + phrase bonuses) to each
-    # summary so direct-MCP callers can order their UI. Cap at 100 — the
-    # bonuses can take a strong fuzzy match above 100, but the ausdata-api
-    # gateway and most consumers expect a 0-100 scale.
+    q_tokens = [t for t in q_lower.split() if t and t not in STOPWORDS]
+    # Use the stopword-filtered query for the high-signal match too —
+    # otherwise tokens like "history" or "monthly" (which appear in
+    # nearly every table name) drag unrelated tables into high
+    # token_set_ratio scores ('cash rate history' → F11 'Exchange
+    # Rates – Monthly History' wins because of the literal 'history'
+    # overlap, even though F1.1 is the right answer on 'cash rate').
+    q_filtered = " ".join(q_tokens) if q_tokens else q_lower
+
+    scored: list[tuple[float, float, int]] = []  # (final, high, idx)
+    for i, s in enumerate(summaries):
+        name_str = f"{s.id} {s.name}".lower()
+        desc_str = (s.description or "").lower()
+        # rba's TableSummary.description folds in curated YAML keywords +
+        # series descriptions, so include it in the high-signal token
+        # match. Without this, F1.1 (name=Money Market — Monthly) doesn't
+        # match "cash rate" queries — even though F1.1's keywords list
+        # "cash rate" and "cash rate target".
+        high_str = f"{name_str} {desc_str}"
+        full_hay = high_str
+        high = fuzz.token_set_ratio(q_filtered, high_str)
+        desc_raw = fuzz.WRatio(q_lower, desc_str) if desc_str else 0
+        desc = min(desc_raw, DESCRIPTION_CAP)
+        # Token-coverage: count distinct non-stopword query tokens that
+        # appear as substrings in the haystack. Each contributes up to
+        # TOKEN_COVERAGE_WEIGHT / len(q_tokens) to the score, so a full
+        # match across 3 tokens adds the full 35 points.
+        covered = 0
+        if q_tokens:
+            covered = sum(1 for t in q_tokens if t in full_hay)
+            coverage_score = (covered / len(q_tokens)) * TOKEN_COVERAGE_WEIGHT
+        else:
+            coverage_score = 0
+        bonus = 0
+        if high >= HIGH_SIGNAL_GATE:
+            if s.is_curated:
+                bonus += CURATED_BONUS
+            if q_lower and q_lower in high_str:
+                bonus += PHRASE_BONUS
+        final = min(high + desc * 0.5 + coverage_score + bonus, 100.0)
+        scored.append((final, high, i))
+    scored.sort(key=lambda t: (-t[0], -t[1]))
     return [
-        summaries[idx].model_copy(update={"relevance": round(min(float(adj), 100.0), 1)})
-        for adj, _score, idx in rescored[:limit]
+        summaries[idx].model_copy(update={"relevance": round(float(final), 1)})
+        for final, _high, idx in scored[:limit]
     ]
 
 
