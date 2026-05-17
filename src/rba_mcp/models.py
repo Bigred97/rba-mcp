@@ -97,6 +97,86 @@ class DataResponse(BaseModel):
     truncated_at: int | None = None
 
 
+class ReleaseEntry(BaseModel):
+    """One upcoming RBA publication / event.
+
+    Shared shape with `abs-mcp.ReleaseEntry` so the ausdata-api webhook
+    poller doesn't need to branch per source. Note: `dataset_id` is the
+    field name on this model for shape parity even though rba calls its
+    curated identifiers `table_id` everywhere else — the field carries
+    the F-table key when the release is an F-table refresh, else null.
+    """
+    release_at: datetime = Field(
+        description=(
+            "Publication time as an ISO-8601 timestamp with tz offset. "
+            "RBA publishes in Sydney local time — offset moves between "
+            "+10:00 (AEST) and +11:00 (AEDT) across DST."
+        )
+    )
+    title: str = Field(
+        description=(
+            "Publication or event name as the RBA labels it, e.g. "
+            "'Statement on Monetary Policy', 'Financial Aggregates', "
+            "'Minutes of Monetary Policy Meeting'."
+        )
+    )
+    event_type: str = Field(
+        default="data_release",
+        description=(
+            "One of 'data_release' (regular statistical publication), "
+            "'policy_decision' (cash-rate decision; separate from F1.1 "
+            "data which lags), 'statement' (Statement on Monetary Policy, "
+            "Minutes, Financial Stability Review, Bulletin), or 'speech'."
+        ),
+    )
+    dataset_id: str | None = Field(
+        default=None,
+        description=(
+            "Curated rba-mcp F-table key when the release refreshes one "
+            "(e.g. 'D1' for Financial Aggregates). Null for releases "
+            "that don't map to a curated table."
+        ),
+    )
+    publication_id: str | None = Field(
+        default=None,
+        description=(
+            "Stable RBA publication identifier — table letter+number "
+            "(e.g. 'A1', 'D1', 'F11.1') or 'SMP' / 'MINUTES' / 'BULLETIN' "
+            "for narrative releases. Useful for deduplication."
+        ),
+    )
+    source_url: str = Field(
+        description="Canonical click-through URL on rba.gov.au."
+    )
+    reference_period: str | None = Field(
+        default=None,
+        description=(
+            "The reporting period the release covers, where surfaced "
+            "(e.g. 'March 2026', 'May 2026'). Often null on the RBA "
+            "schedule — the URL has it but the calendar page itself "
+            "doesn't carry it as a structured field."
+        ),
+    )
+
+
+class ReleaseCalendarResponse(BaseModel):
+    """Upcoming RBA publications + events over a rolling horizon.
+
+    Shape mirrors `abs-mcp.ReleaseCalendarResponse` so the gateway can
+    diff/route both sources through the same code path.
+    """
+    horizon_days: int
+    row_count: int
+    releases: list[ReleaseEntry] = Field(default_factory=list)
+    source: str = "Reserve Bank of Australia"
+    source_url: str = "https://www.rba.gov.au/schedules-events/"
+    attribution: str = _RBA_ATTRIBUTION
+    retrieved_at: datetime
+    server_version: str = Field(default_factory=lambda: _get_server_version())
+    stale: bool = False
+    stale_reason: str | None = None
+
+
 def _get_server_version() -> str:
     try:
         from importlib.metadata import version

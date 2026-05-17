@@ -1,5 +1,53 @@
 # Changelog
 
+## [0.8.0] - 2026-05-17
+
+### Added — `release_calendar(days_ahead)` tool
+
+New tool exposes the RBA's `/schedules-events/` page as a structured
+feed. Same envelope + per-entry shape as `abs-mcp.release_calendar` so
+the ausdata-api gateway can poll both sources through a single code
+path for its webhook product.
+
+The RBA page has two tables which we merge and dedupe:
+
+- **"This Week"** — dated rows like "Thursday, 21 May" relative to the
+  week-commencing caption. We extract specific-day rows and skip
+  "Weekdays" recurring entries (daily file refreshes would drown out
+  real events).
+- **"Releases Expected"** — month-grid covering ~4 months ahead. Each
+  cell contains either "Released" (past, skip), a day-of-month integer
+  (emit entry), or `—` (not this month).
+
+Per-entry shape:
+
+```
+release_at:       ISO-8601 with Sydney offset
+title:            "Statement on Monetary Policy", "Financial Aggregates", ...
+event_type:       "data_release" | "statement"
+                  ("policy_decision" is NOT exposed — cash-rate
+                   decisions live on a different RBA page; the SoMP
+                   + Minutes that follow are tagged "statement")
+dataset_id:       curated F-table key when the release refreshes one
+                  (D1 for Financial Aggregates, C1 for Retail
+                  Payments, F11.1 for Exchange Rates Daily, etc.)
+publication_id:   stable RBA publication ID — "A1", "D1", "SMP",
+                  "MINUTES", "BULLETIN", "FSR", "CHART_PACK"
+source_url:       click-through URL on rba.gov.au
+```
+
+### Internal
+
+- New `release_calendar.py` module — two-table HTML parser, title
+  classifier (`Financial Aggregates → D1`, `Statement on Monetary
+  Policy → SMP/statement`, etc.), Sydney DST-aware timezone projection.
+- `ReleaseCalendarResponse` + `ReleaseEntry` models in `models.py` —
+  uniform field names with `abs-mcp` (`dataset_id` rather than
+  `table_id`) so the gateway doesn't branch per source.
+- New cache kind `"calendar"` with 24h TTL.
+- 21 regression tests in `tests/test_release_calendar.py`. 184 tests
+  pass total.
+
 ## [0.7.6] - 2026-05-17
 
 ### Fixed — event-loop blocking on sync F-table CSV parse

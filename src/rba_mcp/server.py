@@ -13,7 +13,7 @@ from __future__ import annotations
 import asyncio
 import difflib
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
 
 from fastmcp import FastMCP
@@ -23,11 +23,13 @@ from . import curated, tables
 from .client import RBAAPIError, RBAClient, get_stale_signal, reset_stale_signal
 from .models import (
     DataResponse,
+    ReleaseCalendarResponse,
     SeriesDetail,
     TableDetail,
     TableSummary,
 )
 from .parsing import filter_by_dates, filter_by_series, parse_csv
+from .release_calendar import fetch_release_calendar
 from .shaping import build_response
 
 # F-table IDs are uppercase letters + digits + dot (e.g. F1.1, F11.1).
@@ -859,6 +861,80 @@ def list_curated() -> list[str]:
         Sorted list of F-table IDs. Always 5 entries today.
     """
     return curated.list_ids()
+
+
+@mcp.tool
+async def release_calendar(
+    days_ahead: Annotated[
+        int,
+        Field(
+            ge=1,
+            le=365,
+            description=(
+                "Horizon in days. Returns RBA publications + events "
+                "scheduled to release between now and `now + days_ahead`. "
+                "Default 30 covers the typical monthly cadence."
+            ),
+            examples=[7, 30, 90],
+        ),
+    ] = 30,
+) -> ReleaseCalendarResponse:
+    """Upcoming RBA publication schedule (data + statements + events).
+
+    Scrapes https://www.rba.gov.au/schedules-events/ and merges the two
+    schedule tables into a single chronological feed. Each entry reports
+    `release_at` (Sydney local with UTC offset), `title`, `event_type`,
+    `dataset_id` (curated F-table key when the release refreshes one,
+    else null), `publication_id`, and `source_url`.
+
+    Event types:
+        - `data_release` — regular statistical publication (Financial
+          Aggregates, Retail Payments, Index of Commodity Prices, etc.)
+        - `statement` — narrative release (Statement on Monetary Policy,
+          Minutes of Monetary Policy Meeting, Financial Stability Review,
+          Bulletin, Chart Pack)
+        - `policy_decision` — cash-rate decisions are NOT exposed here;
+          they appear on a separate RBA page. The Statement on Monetary
+          Policy and Minutes that follow ~24h and ~2 weeks later DO
+          appear, tagged as `statement`.
+
+    Returns the same envelope shape as `abs-mcp.release_calendar` so a
+    gateway poller can dispatch both feeds through the same code path.
+
+    Cached at 24h TTL with stale-fallback on 5xx (per portfolio
+    graceful-degradation policy). The gateway should poll on its own
+    schedule rather than hitting the live HTML.
+
+    Examples:
+        cal = await release_calendar(7)
+        for r in cal.releases:
+            print(r.release_at, r.event_type, r.title, r.publication_id)
+
+        cal = await release_calendar(60)
+        statements = [r for r in cal.releases if r.event_type == "statement"]
+    """
+    if not isinstance(days_ahead, int) or isinstance(days_ahead, bool):
+        raise ValueError(
+            f"days_ahead must be an int, got {type(days_ahead).__name__}. "
+            "Try days_ahead=30 for the typical monthly horizon."
+        )
+    if not (1 <= days_ahead <= 365):
+        raise ValueError(
+            f"days_ahead must be between 1 and 365, got {days_ahead}. "
+            "Use 7 (one week), 30 (default), or 90 (one quarter)."
+        )
+    client = await _get_client()
+    releases, stale, stale_reason = await fetch_release_calendar(
+        client._http, client.cache, days_ahead
+    )
+    return ReleaseCalendarResponse(
+        horizon_days=days_ahead,
+        row_count=len(releases),
+        releases=releases,
+        retrieved_at=datetime.now(UTC),
+        stale=stale,
+        stale_reason=stale_reason,
+    )
 
 
 def main() -> None:

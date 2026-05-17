@@ -20,13 +20,17 @@ from typing import Literal
 
 import aiosqlite
 
-CacheKind = Literal["data", "latest"]
+CacheKind = Literal["data", "latest", "calendar"]
 
 DEFAULT_DB_PATH = Path.home() / ".rba-mcp" / "cache.db"
 
 TTL: dict[CacheKind, timedelta] = {
     "data": timedelta(hours=6),     # RBA refreshes mid-morning Sydney for daily tables
     "latest": timedelta(minutes=15),  # post-publication freshness window
+    # RBA shifts release dates a few times a year (board meetings, public
+    # holidays); 24h is fresh enough to catch the slip and cheap enough
+    # that gateway polling never re-fetches the live HTML.
+    "calendar": timedelta(hours=24),
 }
 
 _SCHEMA = """
