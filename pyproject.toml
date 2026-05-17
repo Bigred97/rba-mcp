@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rba-mcp"
-version = "0.8.0"
+version = "0.8.1"
 description = "MCP server for the Reserve Bank of Australia statistical tables (F-tables). Plain-English access to interest rates, FX rates, deposit/lending rates."
 readme = "README.md"
 requires-python = ">=3.11"

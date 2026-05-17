@@ -28,6 +28,10 @@ class TableSummary(BaseModel):
     description: str | None = None
     frequency: str | None = None             # "Daily" / "Monthly" / mixed
     is_curated: bool = False
+    # 0-100 RapidFuzz WRatio score against the search query (with the
+    # curated + phrase bonuses already applied, capped at 100). None when
+    # entry came from list_curated() rather than search_tables().
+    relevance: float | None = None
 
 
 class SeriesDetail(BaseModel):

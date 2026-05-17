@@ -133,7 +133,14 @@ def search_in_memory(
             bonus += PHRASE_BONUS
         rescored.append((score + bonus, score, idx))
     rescored.sort(key=lambda t: (-t[0], -t[1]))
-    return [summaries[idx] for _adj, _score, idx in rescored[:limit]]
+    # Attach the adjusted score (with curated + phrase bonuses) to each
+    # summary so direct-MCP callers can order their UI. Cap at 100 — the
+    # bonuses can take a strong fuzzy match above 100, but the ausdata-api
+    # gateway and most consumers expect a 0-100 scale.
+    return [
+        summaries[idx].model_copy(update={"relevance": round(min(float(adj), 100.0), 1)})
+        for adj, _score, idx in rescored[:limit]
+    ]
 
 
 def search_tables(query: str, limit: int = 10) -> list[TableSummary]:

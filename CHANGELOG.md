@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.8.1] - 2026-05-18
+
+### Added — `TableSummary.relevance` populated by `search_tables()`
+
+`search_tables()` results now carry their RapidFuzz score on the
+`relevance` field (0-100, rounded to 1dp, capped at 100). Previously
+the score was computed internally but discarded — direct-MCP callers
+had to re-run the fuzzy match to recover sort order. The ausdata-api
+gateway already re-ranks; this change is for non-gateway consumers.
+
+The score includes the WRatio fuzzy match + the curated bonus (+30)
++ the phrase-match bonus (+20), so a high-confidence curated table
+hit can read close to 100.
+
+`relevance: None` when the entry came from `list_curated()` rather
+than a search.
+
 ## [0.8.0] - 2026-05-17
 
 ### Added — `release_calendar(days_ahead)` tool
