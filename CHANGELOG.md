@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.4] - 2026-05-18
+
+### Fixed — CI lint failures (unused imports in tables.py + release_calendar.py)
+
+0.8.3 release CI failed lint:
+- `from rapidfuzz import fuzz, process` in `tables.py` — leftover from
+  the pre-refactor `process.extract` ranker; `process` no longer used.
+- `from typing import Any` in `release_calendar.py` — pre-existing
+  unused import surfaced by the lint sweep.
+
+Both cleaned up via `ruff --fix`. No runtime change vs 0.8.3.
+
 ## [0.8.3] - 2026-05-18
 
 ### Fixed — clamp-to-100 ties between unrelated F-tables

@@ -12,7 +12,7 @@ from importlib import resources
 from pathlib import Path
 
 import yaml
-from rapidfuzz import fuzz, process
+from rapidfuzz import fuzz
 
 from .models import TableSummary
 
