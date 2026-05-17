@@ -354,7 +354,7 @@ async def describe_table(
                 "Try again in a moment — the RBA CDN occasionally rate-limits. "
                 "If the failure persists, the table ID may have been retired upstream."
             ) from e
-        _, df = parse_csv(body)
+        _, df = await asyncio.to_thread(parse_csv, body)
 
         series_list = []
         for key, cs in cd.series.items():
@@ -392,7 +392,7 @@ async def describe_table(
                 "Try again in a moment — the RBA CDN occasionally rate-limits. "
                 "If the failure persists, the table ID may have been retired upstream."
             ) from e
-        header, df = parse_csv(body)
+        header, df = await asyncio.to_thread(parse_csv, body)
         series_list = []
         for sid, meta in header.series.items():
             start_date = None
@@ -571,7 +571,12 @@ async def _get_data_impl(
             "If the failure persists, the table ID may have been retired upstream."
         ) from e
 
-    header, df = parse_csv(body)
+    # Run sync pandas/CSV parse off the event loop. RBA F-table CSVs
+    # run 1-15MB and parse_csv uses pd.read_csv + ragged-row handling,
+    # which is CPU-bound. Blocking the event loop here serialises
+    # concurrent requests and stalls downstream consumers like the
+    # ausdata-api gateway against its 20s budget.
+    header, df = await asyncio.to_thread(parse_csv, body)
 
     # Bug-fix (0.1.4): for non-curated tables, validate requested series
     # against the actual CSV header. Previously a typo silently produced

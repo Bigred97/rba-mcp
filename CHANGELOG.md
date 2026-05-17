@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.6] - 2026-05-17
+
+### Fixed — event-loop blocking on sync F-table CSV parse
+
+Three `parse_csv(body)` call-sites in `server.py` (inside async
+`describe_table` and `_get_data_impl`) ran the sync pandas parse on the
+event-loop thread. RBA F-table CSVs run 1-15MB and `parse_csv` uses
+`pd.read_csv` with ragged-row handling — CPU-bound work that blocked
+every concurrent tool call behind one parse and stalled downstream
+consumers like the `ausdata-api` gateway against its 20s budget.
+Wrapped all three call-sites in `asyncio.to_thread`. Matches the
+0.10.1 / 0.4.7 / 0.5.4 / 0.6.4 / 0.8.6 / 0.8.6 portfolio-wide fixes in
+abs / aihw / wgea / asic / apra / ato.
+
 ## [0.7.5] - 2026-05-17
 
 ### Improved — F-table-not-found error message lists curated IDs
