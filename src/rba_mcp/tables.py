@@ -152,7 +152,7 @@ def search_in_memory(
     # overlap, even though F1.1 is the right answer on 'cash rate').
     q_filtered = " ".join(q_tokens) if q_tokens else q_lower
 
-    scored: list[tuple[float, float, int]] = []  # (final, high, idx)
+    candidates: list[tuple[float, float, int]] = []  # (raw_adjusted, high, idx)
     for i, s in enumerate(summaries):
         name_str = f"{s.id} {s.name}".lower()
         desc_str = (s.description or "").lower()
@@ -180,15 +180,36 @@ def search_in_memory(
         if high >= HIGH_SIGNAL_GATE:
             if s.is_curated:
                 bonus += CURATED_BONUS
-            if q_lower and q_lower in high_str:
+            # Phrase bonus fires on the STOPWORD-FILTERED query so multi-
+            # token queries like "cash rate history" reward the table
+            # whose haystack contains "cash rate" as a contiguous
+            # substring (F1.1) over one that just has "cash" and "rate"
+            # as separate tokens (F4: cash management trust + retail
+            # deposit rates). Without this, token_set_ratio treats both
+            # haystacks as full matches at 100.
+            if q_filtered and " " in q_filtered and q_filtered in high_str:
                 bonus += PHRASE_BONUS
-        final = min(high + desc * 0.5 + coverage_score + bonus, 100.0)
-        scored.append((final, high, i))
-    scored.sort(key=lambda t: (-t[0], -t[1]))
-    return [
-        summaries[idx].model_copy(update={"relevance": round(float(final), 1)})
-        for final, _high, idx in scored[:limit]
-    ]
+        # DO NOT clamp here — clamping pre-sort collapses the score
+        # distribution. F-table names almost all contain "rate" so high
+        # alone sits 80-100, then desc*0.5 + coverage + bonus pushes
+        # every table to 100, and we lose the relative ordering customers
+        # need (F1.1 should clearly beat F4 for 'cash rate history').
+        raw_adjusted = high + desc * 0.5 + coverage_score + bonus
+        candidates.append((raw_adjusted, high, i))
+    candidates.sort(key=lambda t: (-t[0], -t[1]))
+    top_pool = candidates[:limit]
+    out: list[TableSummary] = []
+    if top_pool:
+        leader_adj = top_pool[0][0]
+        # Proportional scaling: leader maps to its raw score (capped at
+        # 100), others scale relative to the leader. This preserves
+        # ordering AND visible separation between the top hit and the
+        # noise tail. Same pattern abs uses to fix its rel=100 ties.
+        scale_ref = max(leader_adj, 100.0)
+        for raw, _high, idx in top_pool:
+            rel = round(max(0.0, (raw / scale_ref) * 100.0), 1)
+            out.append(summaries[idx].model_copy(update={"relevance": rel}))
+    return out
 
 
 def search_tables(query: str, limit: int = 10) -> list[TableSummary]:

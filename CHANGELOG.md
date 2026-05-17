@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.8.3] - 2026-05-18
+
+### Fixed — clamp-to-100 ties between unrelated F-tables
+
+0.8.2 stopped most over-broad matches but left a clamp-to-100 saturation
+problem: queries like 'cash rate history', 'credit card debt' tied
+multiple unrelated F-tables at rel=100 because the final
+`min(high + desc*0.5 + coverage + bonus, 100.0)` clamp collapsed the
+relative ordering — every table whose score crossed 100 displayed at 100.
+
+Fixes:
+
+- **Proportional relevance scaling** (same pattern as abs-mcp 0.11.4):
+  compute the un-clamped `raw_adjusted` per candidate, sort by raw, then
+  scale relative to the leader so rel ∈ [0, 100] is a meaningful ranking
+  signal, not a clamp ceiling. The leader caps at 100; everyone else
+  scales proportionally.
+- **Phrase bonus uses stopword-filtered query** so 'cash rate history'
+  → q_filtered='cash rate' fires the phrase bonus on F1.1 (whose
+  haystack contains 'cash rate' as a contiguous substring) but NOT on
+  F4 (haystack has 'cash management trust' + separate 'rates' tokens).
+  Previously the bonus only fired on the literal query, which almost
+  never matched.
+- **C1 keyword expansion**: added 'credit card debt', 'credit card
+  balances', 'card debt', 'revolving credit', 'outstanding balances'
+  so customer queries about credit-card debt resolve to C1 (Credit and
+  Charge Card Statistics) over F5/F8 (lending rates).
+
+Verification (post-fix scores for the canonical customer-sim queries):
+- 'cash rate history' → F1.1 alone at 100 (F4 falls to 91.9, F1 to 89.2)
+- 'credit card debt' → C1 alone at 100 (F5/F8 fall to 75.6)
+- 'household debt' → E2 at 100, C1 at 91.9 (E2 is the household leverage table)
+- 'mortgage rates' → F6 alone at 100
+- 'inflation expectations' → G3 alone at 100
+
+184 unit tests pass × consecutive runs verified.
+
 ## [0.8.2] - 2026-05-18
 
 ### Improved — search ranker no longer pushes wrong tables to rel=99
